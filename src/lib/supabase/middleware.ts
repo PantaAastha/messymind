@@ -35,29 +35,30 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    // DISABLED FOR MVP - No authentication required
     // Protected routes
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/signup') &&
-        request.nextUrl.pathname !== '/'
-    ) {
-        // Redirect to login if not authenticated
-        const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        return NextResponse.redirect(url)
-    }
+    // if (
+    //     !user &&
+    //     !request.nextUrl.pathname.startsWith('/login') &&
+    //     !request.nextUrl.pathname.startsWith('/signup') &&
+    //     request.nextUrl.pathname !== '/'
+    // ) {
+    //     // Redirect to login if not authenticated
+    //     const url = request.nextUrl.clone()
+    //     url.pathname = '/login'
+    //     return NextResponse.redirect(url)
+    // }
 
     // Redirect to dashboard if authenticated and trying to access auth pages
-    if (
-        user &&
-        (request.nextUrl.pathname.startsWith('/login') ||
-            request.nextUrl.pathname.startsWith('/signup'))
-    ) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
-        return NextResponse.redirect(url)
-    }
+    // if (
+    //     user &&
+    //     (request.nextUrl.pathname.startsWith('/login') ||
+    //         request.nextUrl.pathname.startsWith('/signup'))
+    // ) {
+    //     const url = request.nextUrl.clone()
+    //     url.pathname = '/dashboard'
+    //     return NextResponse.redirect(url)
+    // }
 
     return supabaseResponse
 }
