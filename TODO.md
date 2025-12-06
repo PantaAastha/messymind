@@ -2,6 +2,14 @@
 
 ## 🔴 Critical - Before Production
 
+> **⚠️ SECURITY WARNING**: See [`SECURITY_FIXES_REQUIRED.md`](./SECURITY_FIXES_REQUIRED.md) for detailed list of all temporary security bypasses that MUST be fixed before production deployment.
+
+### Quick Summary - Security Fixes Needed:
+1. **RLS Policies** - Replace "allow all" with user-scoped policies
+2. **Foreign Key** - Re-add user_id foreign key constraint  
+3. **Middleware** - Re-enable authentication checks
+4. **API Routes** - Use real `auth.uid()` instead of placeholder
+
 ### Authentication & Security
 - [ ] **Enable Supabase Authentication**
   - Set up email/password or OAuth providers

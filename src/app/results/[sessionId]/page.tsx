@@ -6,13 +6,14 @@
 
 import Link from 'next/link';
 
-export default function ResultsPage({ params }: { params: { sessionId: string } }) {
+export default async function ResultsPage({ params }: { params: Promise<{ sessionId: string }> }) {
+    const { sessionId } = await params;
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-5xl mx-auto px-6 py-6">
                     <h1 className="text-3xl font-bold text-gray-900">Analysis Results</h1>
-                    <p className="text-gray-600 mt-2">Session ID: {params.sessionId}</p>
+                    <p className="text-gray-600 mt-2">Session ID: {sessionId}</p>
                 </div>
             </div>
 
