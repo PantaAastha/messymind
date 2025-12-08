@@ -13,6 +13,7 @@ import {
     countReturnViews,
     extractCategories,
 } from './grouping';
+import { parseTimestamp } from '@/lib/csv/parser';
 
 /**
  * Calculate metrics for a single session
@@ -21,6 +22,13 @@ export function calculateSessionMetrics(
     sessionId: string,
     events: GA4Event[]
 ): SessionMetrics {
+    // Sort events by timestamp
+    const sortedEvents = [...events].sort((a, b) => {
+        const dateA = parseTimestamp(a.event_timestamp);
+        const dateB = parseTimestamp(b.event_timestamp);
+        return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
+    });
+
     // Filter events by type
     const viewEvents = events.filter(e => e.event_name === 'view_item');
     const cartEvents = events.filter(e => e.event_name === 'add_to_cart');
@@ -36,7 +44,10 @@ export function calculateSessionMetrics(
     const add_to_cart_count = cartEvents.length;
 
     // Session duration
-    const timestamps = events.map(e => new Date(e.event_timestamp).getTime());
+    // Session duration
+    const timestamps = events
+        .map(e => parseTimestamp(e.event_timestamp)?.getTime())
+        .filter((t): t is number => t !== undefined && !isNaN(t));
     const session_duration_minutes = timestamps.length > 0
         ? (Math.max(...timestamps) - Math.min(...timestamps)) / 60000
         : 0;
@@ -81,6 +92,58 @@ export function calculateSessionMetrics(
         ? (session_duration_minutes * 60) / products_viewed
         : 0;
 
+    // --- Trust & Risk Metrics Calculation ---
+
+    // Policy Views
+    const policyViews = viewEvents.filter(e =>
+        e.page_location && /refund|return|shipping|terms|privacy|guarantee/i.test(e.page_location)
+    ).length;
+
+    // Review Interactions
+    const reviewInteractions = events.filter(e =>
+        (e.event_name && /review/i.test(e.event_name)) ||
+        (e.page_location && /review/i.test(e.page_location))
+    ).length;
+
+    // Fit Guide Views
+    const fitGuideViews = viewEvents.filter(e =>
+        e.page_location && /size-guide|fit-guide|sizing/i.test(e.page_location)
+    ).length;
+
+    // Brand Trust Views
+    const brandTrustViews = viewEvents.filter(e =>
+        e.page_location && /about|story|mission|security|certified/i.test(e.page_location)
+    ).length;
+
+    // Checkout & Purchase
+    const reachedCheckout = events.some(e =>
+        e.event_name === 'begin_checkout' ||
+        (e.page_location && /\/checkout/i.test(e.page_location))
+    ) ? 1 : 0;
+
+    const completedPurchase = events.some(e => e.event_name === 'purchase') ? 1 : 0;
+
+    // Intent (Add to cart OR checkout)
+    const hasIntent = (add_to_cart_count > 0 || reachedCheckout > 0) ? 1 : 0;
+
+    // Time on Cart/Checkout
+    const cartCheckoutEvents = events.filter(e =>
+        e.page_location && /(\/cart|\/checkout)/i.test(e.page_location)
+    );
+    let timeOnCartCheckout = 0;
+    if (cartCheckoutEvents.length > 1) {
+        const first = parseTimestamp(cartCheckoutEvents[0].event_timestamp)?.getTime() || 0;
+        const last = parseTimestamp(cartCheckoutEvents[cartCheckoutEvents.length - 1].event_timestamp)?.getTime() || 0;
+        if (first > 0 && last > 0) {
+            timeOnCartCheckout = (last - first) / 60000;
+        }
+    }
+
+    // Composite Metrics
+    const totalReassuranceTouches = policyViews + reviewInteractions + fitGuideViews + brandTrustViews;
+    const policyBrandViews = policyViews + brandTrustViews;
+    const negativeReviewFocus = 0; // Placeholder until sentiment analysis is added
+
     return {
         session_id: sessionId,
         products_viewed,
@@ -96,6 +159,19 @@ export function calculateSessionMetrics(
         avg_time_per_product: Math.round(avg_time_per_product * 100) / 100,
         categories_viewed,
         primary_category,
+        // New Metrics
+        reached_checkout: reachedCheckout,
+        completed_purchase: completedPurchase,
+        has_intent: hasIntent,
+        policy_views: policyViews,
+        review_interactions: reviewInteractions,
+        fit_guide_views: fitGuideViews,
+        brand_trust_views: brandTrustViews,
+        time_on_cart_checkout: Math.round(timeOnCartCheckout * 100) / 100,
+        // Composite
+        total_reassurance_touches: totalReassuranceTouches,
+        policy_brand_views: policyBrandViews,
+        negative_review_focus: negativeReviewFocus,
     };
 }
 

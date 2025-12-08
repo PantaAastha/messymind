@@ -75,15 +75,22 @@ function buildRecommendations(
     return {
         primary: {
             bucket: primaryBucket.id,
+            label: primaryBucket.name,
+            description: primaryBucket.what_it_does,
+            why_it_works: primaryBucket.why_it_works,
             rationale: primaryRationale,
             quick_wins: primaryBucket.implementation_examples.slice(0, 3), // Top 3
         },
         secondary: {
             bucket: secondaryBucket.id,
-            rationale: secondaryRationale,
-            quick_wins: secondaryBucket.implementation_examples.slice(0, 3),
+            label: secondaryBucket.name,
+            description: secondaryBucket.what_it_does,
+            why_it_works: secondaryBucket.why_it_works,
+            rationale: "Supporting intervention derived from pattern structure.",
+            quick_wins: secondaryBucket.implementation_examples
         },
-        all_relevant_buckets: allRelevantBuckets,
+        all_interventions: [], // Populated at runtime in UI
+        all_relevant_buckets: allRelevantBuckets
     };
 }
 

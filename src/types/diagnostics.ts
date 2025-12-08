@@ -35,6 +35,21 @@ export interface SessionMetrics {
     // Category data
     categories_viewed: string[];
     primary_category?: string;
+
+    // Trust & Risk Metrics (New)
+    reached_checkout: number; // 0 or 1
+    completed_purchase: number; // 0 or 1
+    has_intent: number; // 0 or 1
+    policy_views: number;
+    review_interactions: number;
+    fit_guide_views: number;
+    brand_trust_views: number;
+    time_on_cart_checkout: number; // minutes
+
+    // Composite Metrics (for Rules Engine)
+    total_reassurance_touches: number;
+    policy_brand_views: number;
+    negative_review_focus: number; // 0 or 1 placeholder
 }
 
 // ============================================================================
@@ -79,12 +94,16 @@ export interface DiagnosisOutput {
     confidence: "high" | "medium" | "low";
     confidence_score: number; // 0-100
 
+    category: string; // e.g., "Decision Friction"
+    severity: "critical" | "warning" | "healthy";
+
     scope: "store" | "category" | "segment";
     scope_target: string;
 
     summary: string; // 1-2 sentence description
 
     primary_drivers: string[]; // Array of driver IDs
+    driver_info?: { id: string; label: string; description: string }[]; // Enriched details
 
     evidence_metrics: EvidenceMetrics;
     benchmark_comparison: BenchmarkComparison;
@@ -133,13 +152,18 @@ export interface EstimatedImpact {
 export interface InterventionRecommendations {
     primary: InterventionRecommendation;
     secondary: InterventionRecommendation;
-    all_relevant_buckets: string[]; // All applicable intervention IDs
+    all_interventions: InterventionRecommendation[]; // List of all relevant interventions
+    all_relevant_buckets: string[]; // IDs
 }
 
 export interface InterventionRecommendation {
     bucket: string; // Intervention bucket ID
+    label: string;
+    description: string;
+    why_it_works: string;
     rationale: string;
     quick_wins: string[];
+    triggered_by?: string[]; // Labels of drivers that triggered this
 }
 
 export interface ExampleSession {

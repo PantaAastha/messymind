@@ -7,6 +7,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { SessionMetrics, AggregateMetrics, DiagnosisOutput } from '@/types/diagnostics';
 import type { Pattern } from '@/types/pattern';
+import { ALL_PATTERNS } from '@/lib/patterns';
 import { evaluatePatternAcrossSessions } from '@/lib/detection/rulesEngine';
 import { detectPrimaryDrivers } from '@/lib/detection/driversDetector';
 import { mapInterventions } from '@/lib/detection/interventionMapper';
@@ -43,22 +44,15 @@ export async function runDiagnostics(sessionId: string): Promise<DiagnosisOutput
 
     console.log(`✅ Loaded ${sessionMetrics.length} session metrics`);
 
-    // 2. Fetch all patterns
-    const { data: patterns, error: patternsError } = await supabase
-        .from('patterns')
-        .select('*');
+    // 2. Load patterns (use code registry for reliability)
+    const patterns = ALL_PATTERNS;
 
-    if (patternsError || !patterns) {
-        console.error('❌ Failed to fetch patterns:', patternsError);
-        throw new Error('Failed to fetch patterns');
-    }
-
-    console.log(`✅ Loaded ${patterns.length} patterns`);
+    console.log(`✅ Loaded ${patterns.length} patterns from registry`);
 
     const results: DiagnosisOutput[] = [];
 
     // 3. For each pattern, run detection
-    for (const pattern of patterns as Pattern[]) {
+    for (const pattern of patterns) {
         console.log(`🔎 Evaluating pattern: ${pattern.label}`);
 
         try {

@@ -17,6 +17,7 @@ import type {
 import { evaluatePattern, type DetectionResult } from './rulesEngine';
 import { detectPrimaryDrivers } from './driversDetector';
 import { mapInterventions } from './interventionMapper';
+import { determineSeverity } from './triageRules';
 
 export interface DiagnosisGenerationOptions {
     scope: 'store' | 'category';
@@ -34,10 +35,10 @@ export function generateDiagnosis(
     detectionResults: Map<string, DetectionResult>,
     options: DiagnosisGenerationOptions
 ): DiagnosisOutput | null {
-    // Filter sessions that were detected (medium+ confidence)
+    // Filter sessions that were detected (including low confidence)
     const detectedSessions = allSessionMetrics.filter(metrics => {
         const result = detectionResults.get(metrics.session_id);
-        return result && result.confidence !== 'none' && result.confidence !== 'low';
+        return result && result.confidence !== 'none';
     });
 
     if (detectedSessions.length === 0) {
@@ -112,9 +113,14 @@ export function generateDiagnosis(
         coverage: 'complete',
     };
 
+    // New Triage Logic
+    const severity = determineSeverity(overallConfidence, Math.round(avgConfidenceScore));
+
     return {
         pattern_id: pattern.pattern_id,
         label: pattern.label,
+        category: pattern.category, // Added
+        severity: severity, // Added
         confidence: overallConfidence,
         confidence_score: Math.round(avgConfidenceScore),
         scope: options.scope,

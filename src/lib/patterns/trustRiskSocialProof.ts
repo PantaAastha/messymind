@@ -232,7 +232,7 @@ export const trustRiskSocialProofPattern: Pattern = {
                 conditions: [
                     { metric: 'has_intent', operator: '==', value: 1 },
                     { metric: 'completed_purchase', operator: '==', value: 0 },
-                    { metric: 'total_reassurance_touches', operator: '>=', value: 5 },
+                    { metric: 'total_reassurance_touches', operator: '>=', value: 3 },
                     { metric: 'time_on_cart_checkout', operator: '>=', value: 3, unit: 'minutes' },
                 ],
                 weight: 40,

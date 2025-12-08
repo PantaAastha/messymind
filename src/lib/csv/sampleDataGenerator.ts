@@ -28,12 +28,13 @@ export function generateSampleGA4Data(options: GeneratorOptions = {}): GA4Event[
 
     for (let i = 0; i < sessionCount; i++) {
         const sessionId = `session_${i + 1}`;
-        const userId = `user_${Math.floor(i / 3) + 1}`; // Some users have multiple sessions
+        const userId = `user_${Math.floor(i / 3) + 1}`;
 
         // Determine session behavior
         const rand = Math.random();
-        let sessionType: 'comparison_paralysis' | 'trust_risk' | 'normal';
+        let sessionType: 'comparison_paralysis' | 'trust_risk' | 'normal' | 'mixed';
 
+        // Distribution
         if (rand < comparisonParalysisRate) {
             sessionType = 'comparison_paralysis';
         } else if (rand < comparisonParalysisRate + trustRiskRate) {
@@ -42,11 +43,15 @@ export function generateSampleGA4Data(options: GeneratorOptions = {}): GA4Event[
             sessionType = 'normal';
         }
 
-        // Generate session events based on type
+        // Randomize severity (Low, Medium, High)
+        const severityRoll = Math.random();
+        const severity = severityRoll < 0.33 ? 'low' : severityRoll < 0.66 ? 'medium' : 'high';
+
         const sessionEvents = generateSessionEvents(
             sessionId,
             userId,
             sessionType,
+            severity,
             categories,
             baseDate,
             i
@@ -61,7 +66,8 @@ export function generateSampleGA4Data(options: GeneratorOptions = {}): GA4Event[
 function generateSessionEvents(
     sessionId: string,
     userId: string,
-    sessionType: 'comparison_paralysis' | 'trust_risk' | 'normal',
+    sessionType: 'comparison_paralysis' | 'trust_risk' | 'normal' | 'mixed',
+    severity: 'low' | 'medium' | 'high',
     categories: string[],
     baseDate: Date,
     sessionIndex: number
@@ -74,154 +80,106 @@ function generateSessionEvents(
     const primaryCategory = categories[Math.floor(Math.random() * categories.length)];
 
     if (sessionType === 'comparison_paralysis') {
-        // High exploration, no commitment
-        const productCount = 7 + Math.floor(Math.random() * 5); // 7-11 products
-        const sameCategoryRatio = 0.7 + Math.random() * 0.2; // 70-90%
+        // --- Comparison Paralysis Logic ---
+        // High: 12-20 items, 3+ categories, many switches
+        // Medium: 8-12 items, 2 categories
+        // Low: 5-8 items, mostly 1 category
+
+        let productCount, sameCategoryRatio, switchChance;
+
+        switch (severity) {
+            case 'high': productCount = 12 + Math.floor(Math.random() * 8); sameCategoryRatio = 0.4; switchChance = 0.5; break;
+            case 'medium': productCount = 8 + Math.floor(Math.random() * 5); sameCategoryRatio = 0.7; switchChance = 0.3; break;
+            case 'low': productCount = 5 + Math.floor(Math.random() * 3); sameCategoryRatio = 0.9; switchChance = 0.1; break;
+        }
+
+        let currentCategory = primaryCategory;
 
         for (let i = 0; i < productCount; i++) {
-            const category = Math.random() < sameCategoryRatio ? primaryCategory :
-                categories[Math.floor(Math.random() * categories.length)];
+            // Determine category for this view
+            if (Math.random() < switchChance) {
+                currentCategory = categories[Math.floor(Math.random() * categories.length)];
+            } else if (Math.random() > sameCategoryRatio && currentCategory === primaryCategory) {
+                // Drift away occasionally
+                currentCategory = categories[Math.floor(Math.random() * categories.length)];
+            }
 
-            const itemId = `item_${category.replace(/\s/g, '_')}_${Math.floor(Math.random() * 100)}`;
-            const price = 50 + Math.random() * 100; // Similar price range
+            const itemId = `item_${currentCategory.replace(/\s/g, '_')}_${Math.floor(Math.random() * 20)}`;
+            const price = 50 + Math.random() * 100;
 
-            // View event
-            events.push({
-                session_id: sessionId,
-                event_name: 'view_item',
-                event_timestamp: new Date(timestamp).toISOString(),
-                item_id: itemId,
-                item_name: `${category} Product ${i + 1}`,
-                item_category: category,
-                item_price: Math.round(price * 100) / 100,
-                page_location: `/product/${itemId}`,
-                user_pseudo_id: userId,
-            });
+            events.push(createViewEvent(sessionId, userId, timestamp, itemId, currentCategory, price, i));
+            timestamp += 20000 + Math.random() * 40000;
 
-            timestamp += 30000 + Math.random() * 60000; // 30-90 seconds per product
-
-            // Some revisits
-            if (Math.random() < 0.3) {
-                events.push({
-                    session_id: sessionId,
-                    event_name: 'view_item',
-                    event_timestamp: new Date(timestamp).toISOString(),
-                    item_id: itemId,
-                    item_name: `${category} Product ${i + 1}`,
-                    item_category: category,
-                    item_price: Math.round(price * 100) / 100,
-                    page_location: `/product/${itemId}`,
-                    user_pseudo_id: userId,
-                });
-                timestamp += 20000 + Math.random() * 40000;
+            // Revisit previous items (paralysis behavior)
+            if (severity !== 'low' && Math.random() < 0.3) {
+                // Determine a previous item ID randomly (mocking logic)
+                const revisitId = itemId; // Simplifying for this generator
+                events.push(createViewEvent(sessionId, userId, timestamp + 5000, revisitId, currentCategory, price, i));
+                timestamp += 10000;
             }
         }
 
-        // Add some searches
-        const searchCount = 2 + Math.floor(Math.random() * 2);
-        for (let i = 0; i < searchCount; i++) {
-            events.push({
-                session_id: sessionId,
-                event_name: 'search',
-                event_timestamp: new Date(timestamp).toISOString(),
-                search_term: primaryCategory.toLowerCase(),
-                page_location: '/search',
-                user_pseudo_id: userId,
-            });
-            timestamp += 15000 + Math.random() * 30000;
-        }
-
-        // No cart add (key indicator of paralysis)
+        // No Add to Cart for severe cases
 
     } else if (sessionType === 'trust_risk') {
-        // High intent but drops at checkout
-        const productCount = 3 + Math.floor(Math.random() * 3); // 3-5 products
+        // --- Trust & Risk Logic ---
+        // High: Cart -> Policies -> Reviews -> About -> Checkout -> Exit
+        // Medium: Cart -> Policy -> Checkout -> Exit
+        // Low: Cart -> Checkout -> Exit
 
-        for (let i = 0; i < productCount; i++) {
-            const category = i === 0 ? primaryCategory :
-                (Math.random() < 0.7 ? primaryCategory : categories[Math.floor(Math.random() * categories.length)]);
-
-            const itemId = `item_${category.replace(/\s/g, '_')}_${Math.floor(Math.random() * 100)}`;
-            const price = 60 + Math.random() * 80;
-
-            events.push({
-                session_id: sessionId,
-                event_name: 'view_item',
-                event_timestamp: new Date(timestamp).toISOString(),
-                item_id: itemId,
-                item_name: `${category} Product ${i + 1}`,
-                item_category: category,
-                item_price: Math.round(price * 100) / 100,
-                page_location: `/product/${itemId}`,
-                user_pseudo_id: userId,
-            });
-
-            timestamp += 40000 + Math.random() * 60000;
+        // 1. View some products first
+        for (let i = 0; i < 3; i++) {
+            events.push(createViewEvent(sessionId, userId, timestamp, `item_${i}`, primaryCategory, 89.99, i));
+            timestamp += 30000;
         }
 
-        // Add to cart
-        const mainItem = `item_${primaryCategory.replace(/\s/g, '_')}_1`;
+        // 2. Add to cart
+        const mainItem = `item_trust_test`;
         events.push({
             session_id: sessionId,
             event_name: 'add_to_cart',
             event_timestamp: new Date(timestamp).toISOString(),
             item_id: mainItem,
-            item_name: `${primaryCategory} Product 1`,
+            item_name: 'Premium Runner',
             item_category: primaryCategory,
-            item_price: 79.99,
+            item_price: 120.00,
             page_location: `/product/${mainItem}`,
             user_pseudo_id: userId,
         });
+        timestamp += 15000;
 
-        timestamp += 30000;
+        // 3. Reassurance Loop
+        if (severity === 'high' || severity === 'medium') {
+            // View Policy (Refund)
+            events.push(createPageEvent(sessionId, userId, timestamp, '/return-policy', 'Return Policy'));
+            timestamp += 40000;
 
-        // View cart
-        events.push({
-            session_id: sessionId,
-            event_name: 'view_cart',
-            event_timestamp: new Date(timestamp).toISOString(),
-            page_location: '/cart',
-            user_pseudo_id: userId,
-        });
+            // View Shipping (Critical for hitting >= 2 policy views threshold)
+            events.push(createPageEvent(sessionId, userId, timestamp, '/shipping-info', 'Shipping Information'));
+            timestamp += 30000;
 
-        timestamp += 60000;
+            if (severity === 'high') {
+                // Read Reviews
+                events.push({
+                    session_id: sessionId,
+                    event_name: 'view_reviews',
+                    event_timestamp: new Date(timestamp).toISOString(),
+                    page_location: `/product/${mainItem}#reviews`,
+                    user_pseudo_id: userId,
+                });
+                timestamp += 60000;
 
-        // Check policies (trust deficit signal)
-        events.push({
-            session_id: sessionId,
-            event_name: 'page_view',
-            event_timestamp: new Date(timestamp).toISOString(),
-            page_location: '/policies/returns',
-            page_title: 'Return Policy',
-            user_pseudo_id: userId,
-        });
+                // Check About/Trust
+                events.push(createPageEvent(sessionId, userId, timestamp, '/about-us', 'About Us'));
+                timestamp += 25000;
+            }
+        } else {
+            // Low severity - still needs at least one policy to be potentially interesting
+            events.push(createPageEvent(sessionId, userId, timestamp, '/return-policy', 'Return Policy'));
+            timestamp += 20000;
+        }
 
-        timestamp += 45000;
-
-        events.push({
-            session_id: sessionId,
-            event_name: 'page_view',
-            event_timestamp: new Date(timestamp).toISOString(),
-            page_location: '/policies/shipping',
-            page_title: 'Shipping Information',
-            user_pseudo_id: userId,
-        });
-
-        timestamp += 30000;
-
-        // View reviews (social proof seeking)
-        events.push({
-            session_id: sessionId,
-            event_name: 'view_reviews',
-            event_timestamp: new Date(timestamp).toISOString(),
-            item_id: mainItem,
-            page_location: `/product/${mainItem}#reviews`,
-            user_pseudo_id: userId,
-        });
-
-        timestamp += 90000;
-
-        // Begin checkout
+        // 4. Begin Checkout
         events.push({
             session_id: sessionId,
             event_name: 'begin_checkout',
@@ -229,75 +187,75 @@ function generateSessionEvents(
             page_location: '/checkout',
             user_pseudo_id: userId,
         });
+        timestamp += 50000;
 
-        timestamp += 120000;
-
-        // But no purchase (drops off)
+        // 5. No Purchase (Dropoff)
 
     } else {
-        // Normal session - quick browse and purchase
-        const productCount = 2 + Math.floor(Math.random() * 2);
-
-        for (let i = 0; i < productCount; i++) {
-            const category = primaryCategory;
-            const itemId = `item_${category.replace(/\s/g, '_')}_${Math.floor(Math.random() * 100)}`;
-            const price = 70 + Math.random() * 60;
-
-            events.push({
-                session_id: sessionId,
-                event_name: 'view_item',
-                event_timestamp: new Date(timestamp).toISOString(),
-                item_id: itemId,
-                item_name: `${category} Product ${i + 1}`,
-                item_category: category,
-                item_price: Math.round(price * 100) / 100,
-                page_location: `/product/${itemId}`,
-                user_pseudo_id: userId,
-            });
-
-            timestamp += 25000 + Math.random() * 35000;
-        }
-
-        // Quick add to cart and purchase
-        const mainItem = `item_${primaryCategory.replace(/\s/g, '_')}_1`;
-        events.push({
-            session_id: sessionId,
-            event_name: 'add_to_cart',
-            event_timestamp: new Date(timestamp).toISOString(),
-            item_id: mainItem,
-            item_name: `${primaryCategory} Product 1`,
-            item_category: primaryCategory,
-            item_price: 89.99,
-            page_location: `/product/${mainItem}`,
-            user_pseudo_id: userId,
-        });
-
+        // --- Normal Session ---
+        // Browses and buys
+        events.push(createViewEvent(sessionId, userId, timestamp, 'item_normal', primaryCategory, 50, 1));
         timestamp += 20000;
 
         events.push({
             session_id: sessionId,
+            event_name: 'add_to_cart',
+            event_timestamp: new Date(timestamp).toISOString(),
+            item_id: 'item_normal',
+            item_price: 50,
+            page_location: '/product/item_normal',
+            user_pseudo_id: userId
+        });
+        timestamp += 10000;
+
+        events.push({
+            session_id: sessionId,
             event_name: 'begin_checkout',
             event_timestamp: new Date(timestamp).toISOString(),
             page_location: '/checkout',
-            user_pseudo_id: userId,
+            user_pseudo_id: userId
         });
-
-        timestamp += 60000;
+        timestamp += 30000;
 
         events.push({
             session_id: sessionId,
             event_name: 'purchase',
             event_timestamp: new Date(timestamp).toISOString(),
-            item_id: mainItem,
-            item_name: `${primaryCategory} Product 1`,
-            item_category: primaryCategory,
-            item_price: 89.99,
+            item_id: 'item_normal',
+            item_price: 50,
             page_location: '/checkout/success',
-            user_pseudo_id: userId,
+            user_pseudo_id: userId
         });
     }
 
     return events;
+}
+
+// Helper to create view_item event
+function createViewEvent(sid: string, uid: string, time: number, iid: string, cat: string, price: number, idx: number): GA4Event {
+    return {
+        session_id: sid,
+        event_name: 'view_item',
+        event_timestamp: new Date(time).toISOString(),
+        item_id: iid,
+        item_name: `${cat} Product ${idx}`,
+        item_category: cat,
+        item_price: Math.round(price * 100) / 100,
+        page_location: `/product/${iid}`,
+        user_pseudo_id: uid,
+    };
+}
+
+// Helper to create page_view event
+function createPageEvent(sid: string, uid: string, time: number, path: string, title: string): GA4Event {
+    return {
+        session_id: sid,
+        event_name: 'page_view',
+        event_timestamp: new Date(time).toISOString(),
+        page_location: path,
+        page_title: title,
+        user_pseudo_id: uid
+    };
 }
 
 /**

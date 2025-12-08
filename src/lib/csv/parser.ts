@@ -116,8 +116,8 @@ export function validateGA4Events(events: GA4Event[]): CSVValidationResult {
 
         // Validate timestamp format
         if (event.event_timestamp) {
-            const date = new Date(event.event_timestamp);
-            if (isNaN(date.getTime())) {
+            const date = parseTimestamp(event.event_timestamp);
+            if (!date) {
                 errors.push(`Row ${index + 2}: Invalid timestamp format`);
             }
         }
@@ -156,8 +156,8 @@ export function detectDateRange(events: GA4Event[]): { start: string; end: strin
     if (events.length === 0) return undefined;
 
     const timestamps = events
-        .map(e => new Date(e.event_timestamp).getTime())
-        .filter(t => !isNaN(t));
+        .map(e => parseTimestamp(e.event_timestamp)?.getTime())
+        .filter((t): t is number => t !== undefined && !isNaN(t));
 
     if (timestamps.length === 0) return undefined;
 
@@ -168,6 +168,39 @@ export function detectDateRange(events: GA4Event[]): { start: string; end: strin
         start: minDate.toISOString().split('T')[0],
         end: maxDate.toISOString().split('T')[0],
     };
+}
+
+/**
+ * Parse timestamp with support for ISO strings, milliseconds, and microseconds
+ */
+export function parseTimestamp(input: string | number): Date | null {
+    if (!input) return null;
+
+    // 1. Try ISO string / direct Date parsing
+    const date = new Date(input);
+    if (!isNaN(date.getTime()) && date.getFullYear() > 1970 && date.getFullYear() < 2100) {
+        return date;
+    }
+
+    // 2. Try parsing as number
+    const num = Number(input);
+    if (isNaN(num)) return null;
+
+    // Heuristics for Seconds vs Milliseconds vs Microseconds
+    // 1736364691           ~ Jan 2025 (Seconds)
+    // 1736364691000        ~ Jan 2025 (Milliseconds)
+    // 1736364691000000     ~ Jan 2025 (Microseconds)
+
+    if (num > 1e14) {
+        // Likely Microseconds (16 digits)
+        return new Date(num / 1000);
+    } else if (num < 1e11) {
+        // Likely Seconds (10 digits)
+        return new Date(num * 1000);
+    } else {
+        // Likely Milliseconds (13 digits)
+        return new Date(num);
+    }
 }
 
 /**

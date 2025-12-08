@@ -46,8 +46,8 @@ export default function UploadPage() {
         // Generate sample data directly
         const sampleEvents = generateSampleGA4Data({
             sessionCount: 30,
-            comparisonParalysisRate: 0.3,
-            trustRiskRate: 0.25,
+            comparisonParalysisRate: 0.4,
+            trustRiskRate: 0.4,
         });
 
         // Validate it

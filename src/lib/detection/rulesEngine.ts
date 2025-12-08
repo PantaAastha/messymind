@@ -130,6 +130,19 @@ function getMetricValue(metricId: string, metrics: SessionMetrics): number | und
         return_views: 'return_views',
         search_count: 'search_count',
         avg_time_per_product: 'avg_time_per_product',
+        // New Trust/Risk Metrics
+        reached_checkout: 'reached_checkout',
+        completed_purchase: 'completed_purchase',
+        has_intent: 'has_intent',
+        policy_views: 'policy_views',
+        review_interactions: 'review_interactions',
+        fit_guide_views: 'fit_guide_views',
+        brand_trust_views: 'brand_trust_views',
+        time_on_cart_checkout: 'time_on_cart_checkout',
+        // Composite
+        total_reassurance_touches: 'total_reassurance_touches',
+        policy_brand_views: 'policy_brand_views',
+        negative_review_focus: 'negative_review_focus',
     };
 
     const property = metricMap[metricId];
