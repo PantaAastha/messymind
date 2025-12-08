@@ -151,6 +151,29 @@ function generateRationale(interventionId: string, drivers: string[]): string {
             }
             return 'Light commitment prompts can help move shoppers forward';
         },
+        trust_signals_risk_reversal: (d) => {
+            if (d.includes('checkout_trust_dropoff')) return 'Abandonment at checkout signals need for stronger security reassurance';
+            if (d.includes('policy_scrutiny_before_purchase')) return 'Policy checking before exit indicates anxiety about returns/terms';
+            if (d.includes('brand_reassurance_seeking')) return 'Checking "About" pages signals desire for brand credibility';
+            return 'Trust signals help reduce perceived risk';
+        },
+        returns_shipping_policy_clarity: (d) => {
+            return 'Clear policies reduce anxiety about "what if it goes wrong?"';
+        },
+        fit_will_this_work_helpers: (d) => {
+            if (d.includes('fit_uncertainty_behavior')) return 'Heavy fit guide usage shows need for better sizing confidence';
+            return 'Helping users visualize fit reduces hesitation';
+        },
+        social_proof_reassurance_layer: (d) => {
+            if (d.includes('intensive_review_consumption')) return 'Deep review reading signals reliance on peer validation';
+            return 'Social proof validates the purchase decision';
+        },
+        checkout_reassurance_friction_reduction: (d) => {
+            return 'Reducing friction at the final step prevents last-minute bailouts';
+        },
+        pre_purchase_support_objection_handling: (d) => {
+            return 'Live support can resolve specific blocking objections in real-time';
+        },
     };
 
     const generateFn = rationaleMap[interventionId];

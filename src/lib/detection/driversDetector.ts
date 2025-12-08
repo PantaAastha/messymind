@@ -76,6 +76,18 @@ function getMetricValue(metricId: string, metrics: SessionMetrics): number | und
         return_views: 'return_views',
         search_count: 'search_count',
         avg_time_per_product: 'avg_time_per_product',
+        // Trust & Risk Metrics
+        has_intent: 'has_intent',
+        reached_checkout: 'reached_checkout',
+        completed_purchase: 'completed_purchase',
+        policy_views: 'policy_views',
+        review_interactions: 'review_interactions',
+        fit_guide_views: 'fit_guide_views',
+        brand_trust_views: 'brand_trust_views',
+        time_on_cart_checkout: 'time_on_cart_checkout',
+        total_reassurance_touches: 'total_reassurance_touches',
+        negative_review_focus: 'negative_review_focus',
+        repeat_review_visits: 'return_views', // Approximation or need new metric
     };
 
     const property = metricMap[metricId];

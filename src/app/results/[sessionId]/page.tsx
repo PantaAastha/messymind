@@ -82,7 +82,10 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
 
             for (const rule of rules) {
                 if (rule.primary === bucketId || rule.secondary === bucketId) {
-                    const driversInRule = rule.condition.drivers_include || [];
+                    const driversInRule = [
+                        ...(rule.condition.drivers_include || []),
+                        ...(rule.condition.drivers_include_all || [])
+                    ];
                     const matched = driversInRule.filter(drv => d.primary_drivers.includes(drv));
                     matched.forEach(m => {
                         const drvDef = (pattern as Pattern | undefined)?.driver_definitions.find(dd => dd.id === m);
