@@ -37,13 +37,19 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // For now, we'll use a placeholder user_id
-        const userId = '00000000-0000-0000-0000-000000000000';
-
-        console.log('🔧 Creating Supabase client...');
         const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        console.log('💾 Inserting session to database...');
+        if (!user || authError) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        const userId = user.id;
+
+        console.log('💾 Inserting session to database for user:', userId);
         const insertData = {
             user_id: userId,
             name,
