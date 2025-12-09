@@ -6,8 +6,21 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Redirect authenticated users to dashboard
+  if (user) {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-6 py-16">
@@ -16,11 +29,11 @@ export default function HomePage() {
           <div className="inline-flex items-center justify-center mb-8">
             <div className="relative h-40 w-40">
               <Image
-                src="/logo.png"
+                src="/MMlogo.png"
                 alt="MessyMind"
                 width={160}
                 height={160}
-                className="object-contain drop-shadow-lg"
+                className="object-contain"
                 priority
               />
             </div>

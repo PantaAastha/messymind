@@ -23,12 +23,12 @@ export default function SignupPage() {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="mx-auto h-24 w-24 relative mb-6">
+                <div className="mx-auto h-28 w-28 relative mb-6">
                     <Image
-                        src="/logo.png"
+                        src="/MMlogo.png"
                         alt="MessyMind"
-                        width={96}
-                        height={96}
+                        width={112}
+                        height={112}
                         className="object-contain"
                         priority
                     />
