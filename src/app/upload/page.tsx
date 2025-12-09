@@ -90,67 +90,76 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-5xl mx-auto px-6 py-6">
-                    <h1 className="text-3xl font-bold text-gray-900">New Diagnostic Analysis</h1>
-                    <p className="text-gray-600 mt-2">
+        <div className="min-h-screen bg-background">
+            {/* Main Content */}
+            <div className="max-w-5xl mx-auto px-6 py-12">
+                <div className="mb-12 text-center">
+                    <h1 className="text-3xl font-bold text-foreground mb-2">New Diagnostic Analysis</h1>
+                    <p className="text-gray-500">
                         Upload your GA4 event data to detect behavioral friction patterns
                     </p>
                 </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="max-w-5xl mx-auto px-6 py-8">
                 <div className="space-y-8">
                     {/* Demo Data Section */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div className="card p-8 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 border-brand-primary/20">
                         <div className="text-center">
-                            <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                                Try it with Demo Data
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-accent/10 mb-4">
+                                <svg className="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">
+                                Quick Start with Demo Data
                             </h3>
-                            <p className="text-sm text-blue-700 mb-4">
-                                Use synthetic GA4 data with realistic behavioral patterns to test the diagnostic tool
+                            <p className="text-sm text-gray-500 mb-6 max-w-xl mx-auto">
+                                Test the diagnostic tool instantly with synthetic GA4 data containing realistic behavioral patterns
                             </p>
                             <div className="flex justify-center gap-3">
                                 <button
                                     onClick={handleUseDemoData}
-                                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                    className="btn-primary inline-flex items-center gap-2"
                                 >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                     Use Demo Data
                                 </button>
                                 <button
                                     onClick={handleGenerateSample}
-                                    className="px-6 py-2.5 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+                                    className="btn-secondary inline-flex items-center gap-2 hover:border-brand-secondary hover:text-brand-secondary"
                                 >
-                                    Download CSV
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Download Sample CSV
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Divider */}
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-gray-50 text-gray-500">or upload your own data</span>
-                        </div>
-                    </div>
-
                     {/* Upload Section */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                            Upload GA4 Event Data
-                        </h2>
+                    <div className="card p-8">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-accent/10">
+                                <svg className="w-5 h-5 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-semibold text-foreground">
+                                    Upload Your GA4 Data
+                                </h2>
+                                <p className="text-sm text-gray-500">Or drag and drop your CSV file below</p>
+                            </div>
+                        </div>
 
                         <FileUploader onUploadComplete={handleUploadComplete} />
 
                         {/* Validation Results */}
                         {validation && (
-                            <div className="mt-6 space-y-4">
+                            <div className="mt-8 space-y-4">
                                 {/* Success Info */}
                                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                                     <div className="flex items-start">
@@ -207,7 +216,7 @@ export default function UploadPage() {
 
                                 {/* Session Name Input */}
                                 <div>
-                                    <label htmlFor="sessionName" className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label htmlFor="sessionName" className="block text-sm font-medium text-foreground mb-2">
                                         Analysis Name
                                     </label>
                                     <input
@@ -216,7 +225,7 @@ export default function UploadPage() {
                                         value={sessionName}
                                         onChange={(e) => setSessionName(e.target.value)}
                                         placeholder="e.g., January 2025 Analysis"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="input-field"
                                     />
                                 </div>
 
@@ -224,9 +233,24 @@ export default function UploadPage() {
                                 <button
                                     onClick={handleSubmit}
                                     disabled={!sessionName.trim() || isSubmitting}
-                                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                                    className="w-full btn-primary disabled:bg-gray-300 disabled:cursor-not-allowed text-center py-3 inline-flex items-center justify-center gap-2"
                                 >
-                                    {isSubmitting ? 'Processing...' : 'Start Analysis'}
+                                    {isSubmitting ? (
+                                        <>
+                                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Start Analysis
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         )}

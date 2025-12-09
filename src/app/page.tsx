@@ -5,16 +5,26 @@
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-6 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            MessyMind
-          </h1>
+          <div className="inline-flex items-center justify-center mb-8">
+            <div className="relative h-40 w-40">
+              <Image
+                src="/logo.png"
+                alt="MessyMind"
+                width={160}
+                height={160}
+                className="object-contain drop-shadow-lg"
+                priority
+              />
+            </div>
+          </div>
           <p className="text-xl text-gray-600 mb-2">
             Messy Middle Diagnostic Tool
           </p>
@@ -24,7 +34,7 @@ export default function HomePage() {
         </div>
 
         {/* Main CTA */}
-        <div className="bg-white rounded-2xl shadow-xl p-12 mb-12">
+        <div className="card p-12 mb-12 hover:border-[#03AC13]/30 transition-all">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Start Your Analysis
@@ -38,40 +48,43 @@ export default function HomePage() {
           <div className="flex justify-center">
             <Link
               href="/upload"
-              className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-semibold shadow-lg hover:shadow-xl"
+              className="inline-flex items-center px-8 py-4 bg-[#03AC13] text-white rounded-lg hover:bg-[#74B72E] transition-all text-lg font-semibold shadow-lg hover:shadow-xl cursor-pointer"
             >
-              New Diagnostic Analysis →
+              New Diagnostic Analysis
+              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
             </Link>
           </div>
         </div>
 
         {/* Features */}
         <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white rounded-xl p-8 shadow-md">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="card p-8 hover:border-[#03AC13]/30 transition-all group">
+            <div className="w-12 h-12 bg-[#03AC13]/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#74B72E]/20 transition-all">
+              <svg className="w-6 h-6 text-[#03AC13] group-hover:text-[#74B72E] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               Pattern Detection
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-500">
               Automatically identify comparison paralysis, trust deficits, and other behavioral friction patterns
               using advanced detection algorithms.
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-md">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="card p-8 hover:border-[#AC039C]/30 transition-all group">
+            <div className="w-12 h-12 bg-[#AC039C]/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#AC039C]/20 transition-all">
+              <svg className="w-6 h-6 text-[#AC039C] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               Actionable Insights
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-500">
               Get specific intervention recommendations backed by behavioral psychology to improve
               conversion rates and reduce cart abandonment.
             </p>
@@ -79,20 +92,20 @@ export default function HomePage() {
         </div>
 
         {/* Patterns Supported */}
-        <div className="mt-12 bg-white rounded-xl p-8 shadow-md">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+        <div className="mt-12 card p-8">
+          <h3 className="text-2xl font-bold text-foreground mb-6 text-center">
             Supported Behavioral Patterns
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="border-l-4 border-blue-500 pl-4">
-              <h4 className="font-semibold text-gray-900 mb-2">Comparison Paralysis</h4>
-              <p className="text-sm text-gray-600">
+            <div className="border-l-4 border-brand-primary pl-4 py-2 hover:bg-brand-primary/5 transition-all rounded-r">
+              <h4 className="font-semibold text-foreground mb-2">Comparison Paralysis</h4>
+              <p className="text-sm text-gray-500">
                 Shoppers explore many products but fail to commit due to decision overload
               </p>
             </div>
-            <div className="border-l-4 border-purple-500 pl-4">
-              <h4 className="font-semibold text-gray-900 mb-2">Trust & Risk Anxiety</h4>
-              <p className="text-sm text-gray-600">
+            <div className="border-l-4 border-brand-accent pl-4 py-2 hover:bg-brand-accent/5 transition-all rounded-r">
+              <h4 className="font-semibold text-foreground mb-2">Trust & Risk Anxiety</h4>
+              <p className="text-sm text-gray-500">
                 Customers reach checkout but drop off due to trust, fit, or social proof concerns
               </p>
             </div>
