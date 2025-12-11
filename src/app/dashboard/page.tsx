@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import DeleteSessionButton from '@/components/dashboard/DeleteSessionButton'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -95,44 +96,50 @@ export default async function DashboardPage() {
                     // Sessions Grid
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sessionsWithCounts.map((session) => (
-                            <Link
+                            <div
                                 key={session.id}
-                                href={`/results/${session.id}`}
-                                className="card p-6 hover:shadow-lg transition-all hover:border-[#AC039C]/30 cursor-pointer group"
+                                className="card p-6 hover:shadow-lg transition-all hover:border-[#AC039C]/30 group relative"
                             >
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-[#03AC13] transition-colors">
-                                            {session.name}
-                                        </h3>
-                                        <p className="text-sm text-gray-500 mt-1">
-                                            {new Date(session.created_at).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'short',
-                                                day: 'numeric'
-                                            })}
-                                        </p>
-                                    </div>
-                                    <svg className="w-5 h-5 text-gray-400 group-hover:text-[#AC039C] transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
+                                {/* Delete Button - Absolute Top Right */}
+                                <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <DeleteSessionButton
+                                        sessionId={session.id}
+                                        sessionName={session.name}
+                                    />
                                 </div>
 
-                                {session.date_range_start && session.date_range_end && (
-                                    <div className="text-sm text-gray-600 mb-4">
-                                        <span className="font-medium">Data Period:</span> {session.date_range_start} to {session.date_range_end}
+                                <Link href={`/results/${session.id}`} className="block">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex-1 min-w-0 pr-8">
+                                            <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-[#03AC13] transition-colors">
+                                                {session.name}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                {new Date(session.created_at).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
                                     </div>
-                                )}
 
-                                <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-[#AC039C]"></div>
-                                        <span className="text-sm text-gray-700">
-                                            <span className="font-semibold text-gray-900">{session.patternCount}</span> pattern{session.patternCount !== 1 ? 's' : ''} detected
-                                        </span>
+                                    {session.date_range_start && session.date_range_end && (
+                                        <div className="text-sm text-gray-600 mb-4">
+                                            <span className="font-medium">Data Period:</span> {session.date_range_start} to {session.date_range_end}
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#AC039C]"></div>
+                                            <span className="text-sm text-gray-700">
+                                                <span className="font-semibold text-gray-900">{session.patternCount}</span> pattern{session.patternCount !== 1 ? 's' : ''} detected
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
+                                </Link>
+                            </div>
                         ))}
                     </div>
                 )}

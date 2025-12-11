@@ -5,25 +5,18 @@ interface InterventionRecommendationsProps {
     recommendations: {
         primary: InterventionRecommendation;
         secondary: InterventionRecommendation;
-        all_interventions: InterventionRecommendation[];
+        all_interventions?: InterventionRecommendation[]; // Optional, not used
     };
 }
 
 export function InterventionRecommendations({ recommendations }: InterventionRecommendationsProps) {
-    const { primary, secondary, all_interventions = [] } = recommendations;
+    const { primary, secondary } = recommendations;
 
-    // Helper to check if an item is primary or secondary
-    const isPrimary = (id: string) => id === primary.bucket;
-    const isSecondary = (id: string) => id === secondary.bucket;
-
-    // Sort: Primary first, then Secondary, then others
-    const sortedInterventions = [...all_interventions].sort((a, b) => {
-        if (isPrimary(a.bucket)) return -1;
-        if (isPrimary(b.bucket)) return 1;
-        if (isSecondary(a.bucket)) return -1;
-        if (isSecondary(b.bucket)) return 1;
-        return 0;
-    });
+    // Option A: Show ONLY primary and secondary (explicitly matched interventions)
+    const interventionsToShow = [
+        { ...primary, isPrimary: true, isSecondary: false },
+        { ...secondary, isPrimary: false, isSecondary: true }
+    ];
 
     return (
         <div className="space-y-4">
@@ -31,9 +24,9 @@ export function InterventionRecommendations({ recommendations }: InterventionRec
                 Recommended Actions
             </h4>
 
-            {sortedInterventions.map((item, idx) => {
-                const primaryItem = isPrimary(item.bucket);
-                const secondaryItem = isSecondary(item.bucket);
+            {interventionsToShow.map((item, idx) => {
+                const primaryItem = item.isPrimary;
+                const secondaryItem = item.isSecondary;
                 const drivers = item.triggered_by || [];
 
                 // Styling logic

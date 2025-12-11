@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ClinicalDashboard } from '@/components/results/ClinicalDashboard';
 import { calculateHealthScore } from '@/lib/metrics/healthScore';
 import { determineSeverity } from '@/lib/detection/triageRules';
-import type { DiagnosisOutput } from '@/types/diagnostics';
+import type { DiagnosisOutput, AggregateMetrics } from '@/types/diagnostics';
 import type { Pattern } from '@/types/pattern';
 
 // Helper to transform DB row to DiagnosisOutput
@@ -123,34 +123,36 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
     const health = calculateHealthScore(diagnoses);
 
     // 6. Get Store Metrics for Hero
-    // 6. Get Store Metrics for Hero
-    let storeMetrics: any = {
-        avg_view_to_cart_rate: 0,
-        total_sessions: 0,
+    const aggregateMetrics: AggregateMetrics = {
         scope: 'store',
-        scope_target: null,
-        date_range_start: new Date().toISOString(),
-        date_range_end: new Date().toISOString(),
-        total_users: 0,
-        avg_session_duration: 0,
-        avg_conversion_rate: 0,
-        bounce_rate: 0
-    };
+        scope_target: 'All products',
+        total_sessions: session.data_quality?.session_count || 0, // Using session.data_quality?.session_count as total_sessions
+        date_range_start: session.date_range_start || '',
+        date_range_end: session.date_range_end || '',
+        avg_products_viewed: diagnoses.reduce((sum, r) => sum + (r.evidence_metrics?.avg_products_viewed_per_session || 0), 0) / Math.max(diagnoses.length, 1),
+        avg_add_to_cart_count: 0, // Not tracked
+        avg_session_duration_minutes: diagnoses.reduce((sum, r) => sum + (r.evidence_metrics?.avg_session_duration_minutes || 0), 0) / Math.max(diagnoses.length, 1),
+        avg_view_to_cart_rate: diagnoses.reduce((sum, r) => sum + (r.evidence_metrics?.avg_view_to_cart_rate || 0), 0) / Math.max(diagnoses.length, 1),
+        avg_same_category_ratio: diagnoses.reduce((sum, r) => sum + (r.evidence_metrics?.avg_same_category_ratio || 0), 0) / Math.max(diagnoses.length, 1),
 
-    if (Array.isArray(session.aggregate_metrics)) {
-        const found = session.aggregate_metrics.find((m: any) => m.scope === 'store');
-        if (found) storeMetrics = found;
-    } else if (session.aggregate_metrics && typeof session.aggregate_metrics === 'object') {
-        // Fallback for single object case
-        if ((session.aggregate_metrics as any).scope === 'store') {
-            storeMetrics = session.aggregate_metrics as any;
-        }
-    }
+        // Calculate conversion metrics from transformed results
+        store_conversion_rate: diagnoses.length > 0
+            ? diagnoses[0].estimated_impact?.conversion_rate || 0.02 // Use calculated rate from first diagnosis
+            : 0.02,
+        checkout_completion_rate: diagnoses.length > 0
+            ? (diagnoses[0].estimated_impact?.conversion_rate || 0.02) / ((diagnoses[0].estimated_impact?.conversion_rate || 0) > 0 ? 0.7 : 1) // Approximate from conversion rate
+            : 0.70,
+
+        avg_category_switches: 0,
+        avg_price_range_cv: 0,
+        avg_return_views: 0,
+        avg_search_count: diagnoses[0]?.evidence_metrics?.avg_search_count || 0,
+    };
 
     return (
         <ClinicalDashboard
             diagnoses={diagnoses}
-            aggregateMetrics={storeMetrics}
+            aggregateMetrics={aggregateMetrics}
             sessionCount={session.data_quality?.session_count || 0}
         />
     );

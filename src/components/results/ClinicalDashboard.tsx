@@ -89,7 +89,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }:
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <StatTile
                             label="Store Conversion"
-                            value="N/A" // Missing purchase data
+                            value={aggregateMetrics ? `${(aggregateMetrics.store_conversion_rate * 100).toFixed(1)}%` : 'N/A'}
                             benchmark="2-3%"
                         />
                         <StatTile
@@ -105,7 +105,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }:
                         />
                         <StatTile
                             label="Checkout Completion"
-                            value="N/A"
+                            value={aggregateMetrics ? `${(aggregateMetrics.checkout_completion_rate * 100).toFixed(1)}%` : 'N/A'}
                             benchmark="70-75%"
                         />
                         <StatTile

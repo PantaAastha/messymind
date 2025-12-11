@@ -68,9 +68,14 @@ export interface AggregateMetrics {
 
     // Averages
     avg_products_viewed: number;
-    avg_session_duration: number;
+    avg_add_to_cart_count: number;
+    avg_session_duration_minutes: number;
     avg_view_to_cart_rate: number;
     avg_same_category_ratio: number;
+
+    // Conversion metrics
+    store_conversion_rate: number; // Purchases / Total Sessions
+    checkout_completion_rate: number; // Purchases / Checkouts Started
     avg_category_switches: number;
     avg_price_range_cv: number;
     avg_return_views: number;
