@@ -22,17 +22,45 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }:
     // Note: Patterns can overlap, so this visualization is an approximation unless we strictly segment.
     // For MVP, we'll assume primary pattern assignment or just show relative prevalence.
 
-    const patternData = diagnoses.map(d => ({
-        name: d.label,
-        value: d.estimated_impact.affected_session_count || 0,
-        color: d.label.includes('Impulse') ? '#60A5FA' : (d.severity === 'critical' ? '#EF4444' : '#F59E0B')
-    })).sort((a, b) => b.value - a.value);
+    const patternData = diagnoses.map(d => {
+        // Assign distinct colors based on pattern type
+        let color = '#9CA3AF'; // default gray
+        if (d.label.includes('Comparison') || d.label.includes('Paralysis')) {
+            color = '#F59E0B'; // Amber/Orange for Comparison Paralysis
+        } else if (d.label.includes('Trust') || d.label.includes('Risk') || d.label.includes('Social Proof')) {
+            color = '#EF4444'; // Red for Trust/Risk
+        } else if (d.label.includes('Impulse')) {
+            color = '#60A5FA'; // Blue for Impulse
+        } else if (d.severity === 'critical') {
+            color = '#EF4444'; // Red for critical
+        } else if (d.severity === 'warning') {
+            color = '#F59E0B'; // Orange for warning
+        }
+
+        return {
+            name: d.label,
+            value: d.estimated_impact.affected_session_count || 0,
+            color: color
+        };
+    }).sort((a, b) => b.value - a.value);
 
     const affectedTotal = patternData.reduce((sum, p) => sum + p.value, 0);
     const healthyOrOther = Math.max(0, sessionCount - affectedTotal);
 
-    // Sort diagnoses by Priority Score
-    const sortedDiagnoses = [...diagnoses].sort((a, b) => b.priority_score - a.priority_score);
+    // Sort diagnoses by Priority Score (already sorted by revenue_at_risk in backend)
+    const sortedDiagnoses = [...diagnoses].sort((a, b) => (b.revenue_at_risk || 0) - (a.revenue_at_risk || 0));
+
+    // Calculate total revenue at risk
+    const totalRevenueAtRisk = diagnoses.reduce((sum, d) => sum + (d.revenue_at_risk || 0), 0);
+    const formattedTotalRevenue = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(totalRevenueAtRisk);
+
+    // Identify highest risk pattern
+    const highestRiskAmount = sortedDiagnoses[0]?.revenue_at_risk || 0;
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
@@ -63,6 +91,11 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }:
                             label="Store Conversion"
                             value="N/A" // Missing purchase data
                             benchmark="2-3%"
+                        />
+                        <StatTile
+                            label="Total Revenue at Risk"
+                            value={formattedTotalRevenue}
+                            highlight={true}
                         />
                         <StatTile
                             label="Add-to-Cart Rate"
@@ -146,7 +179,10 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }:
                         ) : (
                             sortedDiagnoses.map((d) => (
                                 <div key={d.pattern_id} onClick={() => setSelectedDiagnosis(d)} className="cursor-pointer transition-transform active:scale-[0.99]">
-                                    <PriorityCard diagnosis={d} />
+                                    <PriorityCard
+                                        diagnosis={d}
+                                        isHighestRisk={d.revenue_at_risk === highestRiskAmount && highestRiskAmount > 0}
+                                    />
                                 </div>
                             ))
                         )}

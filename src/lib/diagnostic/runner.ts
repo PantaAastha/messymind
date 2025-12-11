@@ -85,12 +85,19 @@ export async function runDiagnostics(sessionId: string): Promise<DiagnosisOutput
                         start: session.date_range_start || '',
                         end: session.date_range_end || '',
                     },
-                }
+                },
+                session.raw_data // Pass raw events for AOV calculation and journey extraction
             );
 
             if (diagnosis) {
-                results.push(diagnosis);
                 console.log(`  💡 Diagnosis generated for: ${pattern.label}`);
+                console.log(`  👥 Sessions: ${diagnosis.estimated_impact.affected_session_count} affected, ${diagnosis.estimated_impact.intent_session_count} with intent`);
+                console.log(`  💰 Revenue at risk: $${diagnosis.revenue_at_risk.toFixed(2)} (realistic)`);
+                console.log(`  📊 Max potential: $${diagnosis.estimated_impact.max_potential_revenue.toFixed(2)}`);
+                console.log(`  🎯 Conversion rate: ${(diagnosis.estimated_impact.conversion_rate * 100).toFixed(2)}% ${diagnosis.estimated_impact.conversion_is_calculated ? '(calculated)' : '(default)'}`);
+                console.log(`  💵 AOV: $${diagnosis.estimated_impact.store_aov.toFixed(2)} ${diagnosis.aov_is_placeholder ? '(default)' : '(calculated)'}`);
+
+                results.push(diagnosis);
 
                 // Save to database
                 await saveDiagnosticResult(sessionId, diagnosis);
@@ -101,6 +108,9 @@ export async function runDiagnostics(sessionId: string): Promise<DiagnosisOutput
             // Continue with other patterns
         }
     }
+
+    // Sort results by revenue_at_risk (descending) - biggest money-loser first
+    results.sort((a, b) => b.revenue_at_risk - a.revenue_at_risk);
 
     console.log(`✅ Diagnostics complete: ${results.length} patterns detected`);
     return results;
@@ -120,6 +130,9 @@ async function saveDiagnosticResult(
         .insert({
             session_id: sessionId,
             pattern_id: diagnosis.pattern_id,
+            label: diagnosis.label,
+            category: diagnosis.category,
+            severity: diagnosis.severity,
             detected: true,
             confidence: diagnosis.confidence,
             confidence_score: diagnosis.confidence_score,
@@ -133,6 +146,10 @@ async function saveDiagnosticResult(
             secondary_intervention: diagnosis.intervention_recommendations.secondary,
             all_relevant_buckets: diagnosis.intervention_recommendations.all_relevant_buckets,
             estimated_impact: diagnosis.estimated_impact,
+            // Phase 1: Financial Impact
+            revenue_at_risk: diagnosis.revenue_at_risk,
+            journey_timeline: diagnosis.journey_timeline,
+            aov_is_placeholder: diagnosis.aov_is_placeholder,
         });
 
     if (error) {

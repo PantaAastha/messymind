@@ -14,6 +14,8 @@ export interface Pattern {
   label: string; // e.g., "Comparison Paralysis"
   category: string; // e.g., "Decision Friction"
   description: string;
+  behavioral_stage: 'pre_intent' | 'post_intent'; // NEW: When pattern occurs in user journey
+  expected_conversion_rate: number; // Stage-specific conversion rate (e.g., 0.03 for pre-intent, 0.30 for post-intent)
   inputs_schema: InputsSchema;
   detection_rules: DetectionRules;
   driver_definitions: DriverDefinition[];

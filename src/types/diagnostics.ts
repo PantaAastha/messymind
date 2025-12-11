@@ -31,6 +31,8 @@ export interface SessionMetrics {
     return_views: number; // Products viewed multiple times
     search_count: number;
     avg_time_per_product: number; // seconds
+    pogo_stick_count: number; // Number of times user bounced back from product to list
+    evaluation_interaction_count: number; // Count of evaluation actions (reviews, size guide, etc.)
 
     // Category data
     categories_viewed: string[];
@@ -84,6 +86,19 @@ export interface AggregateMetrics {
 }
 
 // ============================================================================
+// JOURNEY EVENT
+// ============================================================================
+
+export interface JourneyEvent {
+    timestamp: string; // ISO 8601 format
+    event_type: 'view_item' | 'page_view' | 'add_to_cart' | 'begin_checkout';
+    event_name: string; // Original event name
+    item_name?: string; // For view_item events
+    item_category?: string; // For view_item events
+    page_location?: string; // For page_view events
+}
+
+// ============================================================================
 // DIAGNOSIS OUTPUT
 // ============================================================================
 
@@ -116,6 +131,11 @@ export interface DiagnosisOutput {
     example_sessions: ExampleSession[];
 
     data_quality: DataQuality;
+
+    // Financial Impact (Phase 1)
+    revenue_at_risk: number; // affected_session_count * store_AOV
+    journey_timeline?: JourneyEvent[]; // Representative user journey
+    aov_is_placeholder: boolean; // True if AOV is default $112, false if calculated
 }
 
 export interface EvidenceMetrics {
@@ -145,8 +165,14 @@ export interface BenchmarkComparison {
 export interface EstimatedImpact {
     affected_sessions: string; // e.g., "22% of Running Shoes traffic"
     affected_session_count: number;
+    intent_session_count: number; // NEW: Sessions with add_to_cart or checkout
     potential_uplift_range: string; // e.g., "15-25% improvement"
     estimated_monthly_revenue_impact?: string;
+    store_aov: number; // Store-wide average order value
+    aov_is_placeholder: boolean; // True if using $112 default, false if calculated
+    conversion_rate: number; // Actual conversion rate from data
+    conversion_is_calculated: boolean; // True if calculated from purchases, false if using 2% default
+    max_potential_revenue: number; // If all intent sessions converted
 }
 
 export interface InterventionRecommendations {

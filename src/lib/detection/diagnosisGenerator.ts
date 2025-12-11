@@ -18,6 +18,13 @@ import { evaluatePattern, type DetectionResult } from './rulesEngine';
 import { detectPrimaryDrivers } from './driversDetector';
 import { mapInterventions } from './interventionMapper';
 import { determineSeverity } from './triageRules';
+import {
+    calculateFinancialMetrics,
+    calculateRevenueAtRisk,
+    calculateMaxPotentialRevenue
+} from '@/lib/metrics/financialCalculator';
+import { extractJourneyTimeline, findRepresentativeSession } from '@/lib/metrics/journeyExtractor';
+import type { GA4Event } from '@/types/csv';
 
 export interface DiagnosisGenerationOptions {
     scope: 'store' | 'category';
@@ -33,7 +40,8 @@ export function generateDiagnosis(
     pattern: Pattern,
     allSessionMetrics: SessionMetrics[],
     detectionResults: Map<string, DetectionResult>,
-    options: DiagnosisGenerationOptions
+    options: DiagnosisGenerationOptions,
+    rawEvents?: GA4Event[] // Optional: needed for AOV calculation and journey extraction
 ): DiagnosisOutput | null {
     // Filter sessions that were detected (including low confidence)
     const detectedSessions = allSessionMetrics.filter(metrics => {
@@ -77,11 +85,54 @@ export function generateDiagnosis(
         options.industryBenchmark
     );
 
+    // Calculate Store AOV, Conversion Rate, and Revenue at Risk (Phase 1 - Improved)
+    const financialMetrics = rawEvents
+        ? calculateFinancialMetrics(rawEvents, allSessionMetrics.length)
+        : { aov: 112, aovIsPlaceholder: true, conversionRate: 0.02, conversionIsCalculated: false };
+
+    // Filter for sessions with purchase intent
+    const intentSessions = detectedSessions.filter(s => s.has_intent > 0);
+
+    // Pattern-aware revenue calculation based on behavioral stage
+    // Pre-intent patterns (e.g., Comparison Paralysis) = use all affected sessions + 3% conversion
+    // Post-intent patterns (e.g., Trust/Risk) = use only intent sessions + 30% conversion
+    const isPreIntentPattern = pattern.behavioral_stage === 'pre_intent';
+    const sessionsForRevenue = isPreIntentPattern
+        ? detectedSessions  // Pre-intent: pattern prevents intent formation
+        : intentSessions;   // Post-intent: pattern occurs after intent
+
+    // Use pattern-specific conversion rate (not global rate)
+    // This prioritizes "hot leads" over browsers
+    const conversionRate = pattern.expected_conversion_rate || financialMetrics.conversionRate;
+
+    // Calculate revenue at risk using appropriate session count and conversion
+    const revenueAtRisk = calculateRevenueAtRisk(
+        sessionsForRevenue.length,
+        financialMetrics.aov,
+        conversionRate  // Pattern-specific rate (3% vs 30%)
+    );
+
+    // Calculate maximum potential (for comparison)
+    const maxPotentialRevenue = calculateMaxPotentialRevenue(
+        sessionsForRevenue.length,
+        financialMetrics.aov
+    );
+
+    console.log(`  🎯 Pattern stage: ${pattern.behavioral_stage}`);
+    console.log(`  📊 Using ${sessionsForRevenue.length} sessions (${isPreIntentPattern ? 'all affected' : 'intent only'})`);
+    console.log(`  💹 Conversion rate: ${(conversionRate * 100).toFixed(1)}% ${pattern.expected_conversion_rate ? '(pattern-specific)' : '(global)'}`);
+
     // Generate estimated impact
     const estimatedImpact = generateEstimatedImpact(
         detectedSessions.length,
+        intentSessions.length,
         allSessionMetrics.length,
-        options.scopeTarget
+        options.scopeTarget,
+        financialMetrics.aov,
+        financialMetrics.aovIsPlaceholder,
+        conversionRate,  // Use pattern-specific conversion
+        pattern.expected_conversion_rate !== undefined,  // Track if using pattern rate
+        maxPotentialRevenue
     );
 
     // Map interventions
@@ -116,6 +167,15 @@ export function generateDiagnosis(
     // New Triage Logic
     const severity = determineSeverity(overallConfidence, Math.round(avgConfidenceScore));
 
+    // Extract journey timeline for representative session (Phase 1)
+    let journeyTimeline;
+    if (rawEvents) {
+        const representativeSessionId = findRepresentativeSession(detectedSessions, detectionResults);
+        if (representativeSessionId) {
+            journeyTimeline = extractJourneyTimeline(representativeSessionId, rawEvents);
+        }
+    }
+
     return {
         pattern_id: pattern.pattern_id,
         label: pattern.label,
@@ -134,6 +194,10 @@ export function generateDiagnosis(
         intervention_recommendations: interventionRecommendations,
         example_sessions: exampleSessions,
         data_quality: dataQuality,
+        // Financial Impact (Phase 1 - Improved with Conversion Rate)
+        revenue_at_risk: revenueAtRisk,
+        journey_timeline: journeyTimeline,
+        aov_is_placeholder: financialMetrics.aovIsPlaceholder,
     };
 }
 
@@ -196,15 +260,28 @@ function generateBenchmarkComparison(
 
 function generateEstimatedImpact(
     affectedCount: number,
+    intentCount: number,
     totalCount: number,
-    scopeTarget: string
+    scopeTarget: string,
+    storeAOV: number,
+    aovIsPlaceholder: boolean,
+    conversionRate: number,
+    conversionIsCalculated: boolean,
+    maxPotentialRevenue: number
 ): EstimatedImpact {
     const percentage = ((affectedCount / totalCount) * 100).toFixed(0);
+    const intentPercentage = intentCount > 0 ? ((intentCount / affectedCount) * 100).toFixed(0) : '0';
 
     return {
         affected_sessions: `${percentage}% of ${scopeTarget} traffic`,
         affected_session_count: affectedCount,
+        intent_session_count: intentCount,
         potential_uplift_range: '15-25% improvement in view-to-cart rate',
+        store_aov: storeAOV,
+        aov_is_placeholder: aovIsPlaceholder,
+        conversion_rate: conversionRate,
+        conversion_is_calculated: conversionIsCalculated,
+        max_potential_revenue: maxPotentialRevenue,
     };
 }
 

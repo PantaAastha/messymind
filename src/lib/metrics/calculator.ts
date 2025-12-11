@@ -92,6 +92,28 @@ export function calculateSessionMetrics(
         ? (session_duration_minutes * 60) / products_viewed
         : 0;
 
+    // Pogo stick count - rapid product-to-list bounces
+    // Approximation: count view_item events that are followed by another view_item within 60s but different item
+    let pogo_stick_count = 0;
+    for (let i = 0; i < sortedEvents.length - 1; i++) {
+        const current = sortedEvents[i];
+        const next = sortedEvents[i + 1];
+        if (current.event_name === 'view_item' && next.event_name === 'view_item' && current.item_id !== next.item_id) {
+            const currentTime = parseTimestamp(current.event_timestamp)?.getTime() || 0;
+            const nextTime = parseTimestamp(next.event_timestamp)?.getTime() || 0;
+            if (nextTime - currentTime <= 60000) { // Within 60 seconds
+                pogo_stick_count++;
+            }
+        }
+    }
+
+    // Evaluation interaction count - research actions (reviews, size guides, policies, shipping info)
+    const evaluationEvents = events.filter(e =>
+        (e.page_location && /review|size-guide|fit-guide|sizing|shipping|refund|return/i.test(e.page_location)) ||
+        (e.event_name && /review|size_guide|fit_guide|shipping|refund/i.test(e.event_name))
+    );
+    const evaluation_interaction_count = evaluationEvents.length;
+
     // --- Trust & Risk Metrics Calculation ---
 
     // Policy Views
@@ -157,6 +179,8 @@ export function calculateSessionMetrics(
         return_views,
         search_count,
         avg_time_per_product: Math.round(avg_time_per_product * 100) / 100,
+        pogo_stick_count,
+        evaluation_interaction_count,
         categories_viewed,
         primary_category,
         // New Metrics
