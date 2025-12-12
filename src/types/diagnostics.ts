@@ -171,7 +171,7 @@ export interface EstimatedImpact {
     affected_sessions: string; // e.g., "22% of Running Shoes traffic"
     affected_session_count: number;
     intent_session_count: number; // NEW: Sessions with add_to_cart or checkout
-    potential_uplift_range: string; // e.g., "15-25% improvement"
+    potential_uplift_range?: string; // e.g., "15-25% improvement"
     estimated_monthly_revenue_impact?: string;
     store_aov: number; // Store-wide average order value
     aov_is_placeholder: boolean; // True if using $112 default, false if calculated

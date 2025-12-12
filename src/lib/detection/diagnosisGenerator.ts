@@ -276,7 +276,7 @@ function generateEstimatedImpact(
         affected_sessions: `${percentage}% of ${scopeTarget} traffic`,
         affected_session_count: affectedCount,
         intent_session_count: intentCount,
-        potential_uplift_range: '15-25% improvement in view-to-cart rate',
+        // potential_uplift_range removed - was hardcoded placeholder with no real calculation
         store_aov: storeAOV,
         aov_is_placeholder: aovIsPlaceholder,
         conversion_rate: conversionRate,

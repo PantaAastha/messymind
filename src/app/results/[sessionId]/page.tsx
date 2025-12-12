@@ -154,6 +154,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
             diagnoses={diagnoses}
             aggregateMetrics={aggregateMetrics}
             sessionCount={session.data_quality?.session_count || 0}
+            sessionId={sessionId}
         />
     );
 }

@@ -10,9 +10,10 @@ interface ClinicalDashboardProps {
     diagnoses: DiagnosisOutput[];
     aggregateMetrics: AggregateMetrics; // We need store-level metrics for Hero
     sessionCount: number;
+    sessionId: string; // NEW: Required for action item autosave
 }
 
-export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }: ClinicalDashboardProps) {
+export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, sessionId }: ClinicalDashboardProps) {
     const [selectedDiagnosis, setSelectedDiagnosis] = React.useState<DiagnosisOutput | null>(null);
 
     // 1. Prepare Stacked Bar Data
@@ -71,10 +72,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }:
                         <div className="text-sm font-medium text-gray-500">Jan 1 – Jan 31, 2025</div>
                         <h1 className="text-lg font-bold text-gray-900">Store-wide Analysis</h1>
                     </div>
-                    <div className="flex gap-2">
-                        <button className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200 bg-white">
-                            Save Report
-                        </button>
+                    <div>
                         <button className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-md">
                             Download PDF
                         </button>
@@ -195,6 +193,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount }:
                 diagnosis={selectedDiagnosis}
                 isOpen={!!selectedDiagnosis}
                 onClose={() => setSelectedDiagnosis(null)}
+                sessionId={sessionId}
             />
         </div>
     );
