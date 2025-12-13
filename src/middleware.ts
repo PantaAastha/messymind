@@ -1,7 +1,24 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from './lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+    // Public paths that don't require authentication
+    const publicPaths = [
+        '/auth/login',
+        '/auth/signup',
+        '/auth/callback',
+        '/reports/.*/print', // Allow PDF print routes for Puppeteer
+    ];
+
+    const isPublicPath = publicPaths.some(path => {
+        const regex = new RegExp(`^${path}$`);
+        return regex.test(request.nextUrl.pathname);
+    });
+
+    if (isPublicPath) {
+        return NextResponse.next();
+    }
+
     return await updateSession(request)
 }
 

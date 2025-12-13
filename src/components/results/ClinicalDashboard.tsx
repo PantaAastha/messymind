@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { DiagnosisOutput, AggregateMetrics } from '@/types/diagnostics';
 import { PriorityCard } from './PriorityCard';
 import { DiagnosticSheet } from './DiagnosticSheet';
+import { generateReportPDF } from '@/app/actions/generatePDF';
+import { base64ToBlob, downloadBlob } from '@/lib/pdf/utils';
 
 interface ClinicalDashboardProps {
     diagnoses: DiagnosisOutput[];
@@ -15,6 +17,7 @@ interface ClinicalDashboardProps {
 
 export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, sessionId }: ClinicalDashboardProps) {
     const [selectedDiagnosis, setSelectedDiagnosis] = React.useState<DiagnosisOutput | null>(null);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
     // 1. Prepare Stacked Bar Data
     // We want a single bar showing distribution of patterns + "Other" (Healthy/Unclassified)
@@ -63,6 +66,25 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
     // Identify highest risk pattern
     const highestRiskAmount = sortedDiagnoses[0]?.revenue_at_risk || 0;
 
+    // Handle PDF download
+    const handleDownloadPDF = async () => {
+        setIsGeneratingPDF(true);
+
+        try {
+            const pdfBase64 = await generateReportPDF(sessionId);
+
+            // Convert base64 to blob and download
+            const pdfBlob = base64ToBlob(pdfBase64, 'application/pdf');
+            downloadBlob(pdfBlob, `messymind-report-${sessionId}.pdf`);
+
+        } catch (error) {
+            console.error('PDF generation failed:', error);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
             {/* 1. Top Bar */}
@@ -73,8 +95,22 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
                         <h1 className="text-lg font-bold text-gray-900">Store-wide Analysis</h1>
                     </div>
                     <div>
-                        <button className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-md">
-                            Download PDF
+                        <button
+                            onClick={handleDownloadPDF}
+                            disabled={isGeneratingPDF}
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            {isGeneratingPDF ? (
+                                <>
+                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Generating PDF...
+                                </>
+                            ) : (
+                                'Download PDF'
+                            )}
                         </button>
                     </div>
                 </div>
