@@ -47,14 +47,14 @@ export default function DeleteSessionButton({ sessionId, sessionName }: DeleteSe
                 <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 disabled:opacity-50 transition-colors cursor-pointer"
                 >
                     {isDeleting ? 'Deleting...' : 'Confirm Delete'}
                 </button>
                 <button
                     onClick={handleCancel}
                     disabled={isDeleting}
-                    className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-medium rounded hover:bg-gray-300 disabled:opacity-50 transition-colors"
+                    className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-medium rounded hover:bg-gray-300 disabled:opacity-50 transition-colors cursor-pointer"
                 >
                     Cancel
                 </button>
@@ -65,7 +65,7 @@ export default function DeleteSessionButton({ sessionId, sessionName }: DeleteSe
     return (
         <button
             onClick={handleDelete}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all group/delete"
+            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all group/delete cursor-pointer"
             title={`Delete ${sessionName}`}
         >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

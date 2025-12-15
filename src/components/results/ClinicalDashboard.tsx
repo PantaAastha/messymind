@@ -119,7 +119,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
                         <button
                             onClick={handleDownloadPDF}
                             disabled={isGeneratingPDF}
-                            className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                         >
                             {isGeneratingPDF ? (
                                 <>
