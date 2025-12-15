@@ -126,7 +126,18 @@ export default async function DashboardPage() {
 
                                     {session.date_range_start && session.date_range_end && (
                                         <div className="text-sm text-gray-600 mb-4">
-                                            <span className="font-medium">Data Period:</span> {session.date_range_start} to {session.date_range_end}
+                                            <span className="font-medium">Data Period:</span>{' '}
+                                            {new Date(session.date_range_start).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            })}{' '}
+                                            –{' '}
+                                            {new Date(session.date_range_end).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            })}
                                         </div>
                                     )}
 

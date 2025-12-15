@@ -19,6 +19,27 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
     const [selectedDiagnosis, setSelectedDiagnosis] = React.useState<DiagnosisOutput | null>(null);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
+    // Helper to format date range from ISO dates
+    const formatDateRange = (startDate: string, endDate: string): string => {
+        try {
+            const formatOptions: Intl.DateTimeFormatOptions = {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            };
+            const start = new Date(startDate).toLocaleDateString('en-US', formatOptions);
+            const end = new Date(endDate).toLocaleDateString('en-US', formatOptions);
+            return `${start} – ${end}`;
+        } catch {
+            return 'Date range not available';
+        }
+    };
+
+    // Get formatted date range from aggregateMetrics
+    const dateRangeDisplay = aggregateMetrics.date_range_start && aggregateMetrics.date_range_end
+        ? formatDateRange(aggregateMetrics.date_range_start, aggregateMetrics.date_range_end)
+        : 'Date range not available';
+
     // 1. Prepare Stacked Bar Data
     // We want a single bar showing distribution of patterns + "Other" (Healthy/Unclassified)
     // Total sessions = sessionCount
@@ -91,7 +112,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
             <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
                 <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div>
-                        <div className="text-sm font-medium text-gray-500">Jan 1 – Jan 31, 2025</div>
+                        <div className="text-sm font-medium text-gray-500">{dateRangeDisplay}</div>
                         <h1 className="text-lg font-bold text-gray-900">Store-wide Analysis</h1>
                     </div>
                     <div>

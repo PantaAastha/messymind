@@ -5,30 +5,30 @@ import type { DiagnosisOutput } from '@/types/diagnostics';
  * Takes diagnostic data and returns HTML string
  */
 export function generateReportHTML(
-    sessionId: string,
-    session: any,
-    diagnoses: DiagnosisOutput[]
+  sessionId: string,
+  session: any,
+  diagnoses: DiagnosisOutput[]
 ): string {
-    const totalRevenueAtRisk = diagnoses.reduce((sum, d) => sum + (d.revenue_at_risk || 0), 0);
-    const formattedTotalRevenue = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-    }).format(totalRevenueAtRisk);
+  const totalRevenueAtRisk = diagnoses.reduce((sum, d) => sum + (d.revenue_at_risk || 0), 0);
+  const formattedTotalRevenue = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+  }).format(totalRevenueAtRisk);
 
-    const formatDate = (dateStr: string) => {
-        try {
-            return new Date(dateStr).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        } catch {
-            return dateStr;
-        }
-    };
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
-    return `
+  return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -99,13 +99,13 @@ export function generateReportHTML(
       <h2>Patterns Detected</h2>
       <ol class="pattern-list">
         ${diagnoses.map(d => {
-        const revenue = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-        }).format(d.revenue_at_risk || 0);
+    const revenue = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(d.revenue_at_risk || 0);
 
-        return `
+    return `
             <li class="pattern-item">
               <div class="pattern-title">${d.label} – ${revenue} at risk</div>
               <div class="pattern-meta">
@@ -114,18 +114,18 @@ export function generateReportHTML(
               </div>
             </li>
           `;
-    }).join('')}
+  }).join('')}
       </ol>
 
       <h2>Detailed Pattern Analysis</h2>
       ${diagnoses.map(d => {
-        const revenue = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-        }).format(d.revenue_at_risk || 0);
+    const revenue = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(d.revenue_at_risk || 0);
 
-        return `
+    return `
           <div class="detail-section">
             <div class="detail-header">${d.label}</div>
             <div class="detail-summary">${d.summary || 'Analysis of behavioral friction pattern.'}</div>
@@ -171,7 +171,7 @@ export function generateReportHTML(
             </div>
           </div>
         `;
-    }).join('')}
+  }).join('')}
     </body>
     </html>
   `;
