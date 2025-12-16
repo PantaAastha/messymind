@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import Header from '@/components/Header';
 import { ClinicalDashboard } from '@/components/results/ClinicalDashboard';
+import ResultsHeaderContent from '@/components/results/ResultsHeaderContent';
+import DownloadPDFButton from '@/components/results/DownloadPDFButton';
 import { calculateHealthScore } from '@/lib/metrics/healthScore';
 import { determineSeverity } from '@/lib/detection/triageRules';
 import type { DiagnosisOutput, AggregateMetrics } from '@/types/diagnostics';
@@ -150,11 +153,22 @@ export default async function ResultsPage({ params }: { params: Promise<{ sessio
     };
 
     return (
-        <ClinicalDashboard
-            diagnoses={diagnoses}
-            aggregateMetrics={aggregateMetrics}
-            sessionCount={session.data_quality?.session_count || 0}
-            sessionId={sessionId}
-        />
+        <>
+            <Header
+                centerSlot={
+                    <ResultsHeaderContent
+                        dateRangeStart={session.date_range_start || ''}
+                        dateRangeEnd={session.date_range_end || ''}
+                    />
+                }
+                actionsSlot={<DownloadPDFButton sessionId={sessionId} />}
+            />
+            <ClinicalDashboard
+                diagnoses={diagnoses}
+                aggregateMetrics={aggregateMetrics}
+                sessionCount={session.data_quality?.session_count || 0}
+                sessionId={sessionId}
+            />
+        </>
     );
 }
