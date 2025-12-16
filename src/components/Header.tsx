@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import UserAvatar from '@/components/ui/UserAvatar'
+import Logo from '@/components/Logo'
 
 interface HeaderProps {
     centerSlot?: React.ReactNode;
@@ -20,18 +21,7 @@ export default async function Header({ centerSlot, actionsSlot }: HeaderProps = 
             <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8" aria-label="Global">
                 {/* Logo */}
                 <div className="flex lg:flex-1">
-                    <Link href="/" className="-m-1.5 p-1.5 flex items-center group">
-                        <div className="relative h-14 w-14 transition-transform group-hover:scale-105">
-                            <Image
-                                src="/MMlogo.png"
-                                alt="MessyMind"
-                                width={56}
-                                height={56}
-                                className="object-contain"
-                                priority
-                            />
-                        </div>
-                    </Link>
+                    <Logo />
                 </div>
 
                 {/* Center Slot - for page-specific content like date range & title */}
