@@ -28,19 +28,6 @@ export function evaluatePattern(
     pattern: Pattern,
     metrics: SessionMetrics
 ): DetectionResult {
-    // Debug logging for Value Uncertainty
-    if (pattern.pattern_id === 'value_uncertainty') {
-        console.log('🔍 Evaluating Value Uncertainty:', {
-            session_id: metrics.session_id,
-            view_cart_count: metrics.view_cart_count,
-            cart_stall_duration: metrics.cart_stall_duration,
-            sale_page_views: metrics.sale_page_views,
-            add_to_cart_count: metrics.add_to_cart_count,
-            shipping_policy_views: metrics.policy_views,
-            completed_purchase: metrics.completed_purchase,
-        });
-    }
-
     // Evaluate each rule
     const ruleResults = pattern.detection_rules.rules.map(rule =>
         evaluateRule(rule, metrics)
