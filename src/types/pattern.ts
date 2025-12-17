@@ -52,6 +52,7 @@ export interface MetricDefinition {
 export interface DetectionRules {
   rules: Rule[];
   confidence_thresholds: ConfidenceThresholds;
+  saturation_threshold: number; // Raw score at which we're 100% confident pattern exists
   bonus_conditions?: BonusCondition[];
 }
 

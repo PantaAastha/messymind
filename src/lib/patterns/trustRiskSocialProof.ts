@@ -328,10 +328,11 @@ export const trustRiskSocialProofPattern: Pattern = {
             }
         ],
         confidence_thresholds: {
-            high: 70,
-            medium: 40,
-            low: 25,
+            high: 75,   // 75% normalized confidence
+            medium: 40, // 40% normalized confidence
+            low: 20,    // 20% normalized confidence
         },
+        saturation_threshold: 45, // Single strong rule (Rule T1 - Checkout Trust Deficit) triggers 88% confidence - highly sensitive to revenue loss
         // We simplified bonus conditions to match data availability
         bonus_conditions: [
             {

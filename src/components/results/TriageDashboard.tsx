@@ -91,6 +91,7 @@ export function TriageDashboard({
                 diagnosis={selectedDiagnosis}
                 isOpen={!!selectedDiagnosis}
                 onClose={() => setSelectedDiagnosis(null)}
+                sessionId="current"
             />
         </div>
     );

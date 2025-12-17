@@ -7,11 +7,13 @@
 import type { Pattern } from '@/types/pattern';
 import { comparisonParalysisPattern } from './comparisonParalysis';
 import { trustRiskSocialProofPattern } from './trustRiskSocialProof';
+import { ambientShoppingPattern } from './ambientShopping';
 
 // Registry of all patterns
 const patternRegistry: Record<string, Pattern> = {
     comparison_paralysis: comparisonParalysisPattern,
     trust_risk_social_proof: trustRiskSocialProofPattern,
+    ambient_shopping: ambientShoppingPattern,
     // Future patterns will be added here:
     // value_uncertainty: valueUncertaintyPattern,
     // etc.

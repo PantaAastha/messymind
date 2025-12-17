@@ -60,8 +60,28 @@ export function calculateSessionMetrics(
         return_views: returnViews,
         search_count: searchCount,
         avg_time_per_product: avgTimePerProduct,
+        pogo_stick_count: 0, // Legacy calculator - not implemented
+        evaluation_interaction_count: 0, // Legacy calculator - not implemented
         categories_viewed: categoriesViewed,
         primary_category: primaryCategory,
+        category_count: categoriesViewed.length,
+        // Ambient Shopping Metrics
+        long_dwell_count: returnViews, // Using return views as approximation
+        blog_views: 0, // Legacy calculator - not implemented
+        return_sessions_7d: 1, // Legacy calculator - not implemented
+        // Trust & Risk Metrics
+        reached_checkout: 0, // Legacy calculator - not implemented
+        completed_purchase: 0, // Legacy calculator - not implemented
+        has_intent: addToCartCount > 0 ? 1 : 0,
+        policy_views: 0, // Legacy calculator - not implemented
+        review_interactions: 0, // Legacy calculator - not implemented
+        fit_guide_views: 0, // Legacy calculator - not implemented
+        brand_trust_views: 0, // Legacy calculator - not implemented
+        time_on_cart_checkout: 0, // Legacy calculator - not implemented
+        // Composite
+        total_reassurance_touches: 0, // Legacy calculator - not implemented
+        policy_brand_views: 0, // Legacy calculator - not implemented
+        negative_review_focus: 0, // Legacy calculator - not implemented
     };
 }
 

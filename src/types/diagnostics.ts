@@ -37,6 +37,12 @@ export interface SessionMetrics {
     // Category data
     categories_viewed: string[];
     primary_category?: string;
+    category_count: number; // Number of unique categories viewed
+
+    // Ambient Shopping Metrics
+    long_dwell_count: number; // Products with >60s viewing time or multiple views
+    blog_views: number; // Count of blog/content page views
+    return_sessions_7d: number; // Number of sessions for same user within 7 days
 
     // Trust & Risk Metrics (New)
     reached_checkout: number; // 0 or 1

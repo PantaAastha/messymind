@@ -18,40 +18,101 @@ interface ClinicalDashboardProps {
 export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, sessionId }: ClinicalDashboardProps) {
     const [selectedDiagnosis, setSelectedDiagnosis] = React.useState<DiagnosisOutput | null>(null);
 
-    // Helper to format date range from ISO dates - REMOVED (now in ResultsHeaderContent)
-    // Get formatted date range from aggregateMetrics - REMOVED (now in ResultsHeaderContent)
+    // ============================================================================
+    // SEVERITY WATERFALL: Winner-Takes-All Pattern Assignment
+    // ============================================================================
+    // Problem: Sessions can match multiple patterns (e.g., both Trust AND Paralysis)
+    // Solution: Assign each session to EXACTLY ONE dominant pattern based on business priority
+    // 
+    // Hierarchy (Bottom of Funnel → Top of Funnel):
+    //   1. Trust & Risk (Critical) - At checkout, highest intent
+    //   2. Comparison Paralysis (Friction) - Active interest, stuck
+    //   3. Ambient Shopping (Opportunity) - Browsing, low intent
+    //
+    // This ensures the bar chart totals exactly 100% and shows true distribution
 
-    // 1. Prepare Stacked Bar Data
-    // We want a single bar showing distribution of patterns + "Other" (Healthy/Unclassified)
-    // Total sessions = sessionCount
-    // Each diagnosis has 'estimated_impact.affected_session_count'
-    // Note: Patterns can overlap, so this visualization is an approximation unless we strictly segment.
-    // For MVP, we'll assume primary pattern assignment or just show relative prevalence.
+    // Define pattern priority with explicit mapping (lower number = higher priority)
+    const PATTERN_PRIORITY: Record<string, number> = {
+        'trust_risk_social_proof': 1,
+        'comparison_paralysis': 2,
+        'ambient_shopping': 3,
+    };
 
-    const patternData = diagnoses.map(d => {
-        // Assign distinct colors based on pattern type
-        let color = '#9CA3AF'; // default gray
-        if (d.label.includes('Comparison') || d.label.includes('Paralysis')) {
-            color = '#F59E0B'; // Amber/Orange for Comparison Paralysis
-        } else if (d.label.includes('Trust') || d.label.includes('Risk') || d.label.includes('Social Proof')) {
-            color = '#EF4444'; // Red for Trust/Risk
-        } else if (d.label.includes('Impulse')) {
-            color = '#60A5FA'; // Blue for Impulse
-        } else if (d.severity === 'critical') {
-            color = '#EF4444'; // Red for critical
-        } else if (d.severity === 'warning') {
-            color = '#F59E0B'; // Orange for warning
+    const getPatternPriority = (patternId: string): number => {
+        return PATTERN_PRIORITY[patternId] || 99; // Unknown patterns get lowest priority
+    };
+
+    // Sort diagnoses by priority (and by affected count as tiebreaker) to apply waterfall
+    const sortedByPriority = [...diagnoses].sort((a, b) => {
+        const priorityDiff = getPatternPriority(a.pattern_id) - getPatternPriority(b.pattern_id);
+        if (priorityDiff !== 0) return priorityDiff;
+        // If same priority, higher affected count wins
+        return (b.estimated_impact.affected_session_count || 0) - (a.estimated_impact.affected_session_count || 0);
+    });
+
+    // Apply waterfall logic: 
+    // Start with all sessions, assign to highest priority pattern first, then remove those sessions
+    let remainingSessions = sessionCount;
+    const dominantPatternCounts: Array<{
+        patternId: string;
+        pattern: DiagnosisOutput;
+        dominantCount: number;
+        totalAffected: number; // Original affected count (for hover tooltip)
+        overlaps: Array<{ patternId: string; label: string }>;
+    }> = [];
+
+    sortedByPriority.forEach((diagnosis) => {
+        const originalAffected = diagnosis.estimated_impact.affected_session_count || 0;
+
+        // This pattern gets assigned all its sessions that haven't been claimed yet
+        // In reality, some of these sessions also match lower-priority patterns (that's the overlap)
+        const assignedCount = Math.min(originalAffected, remainingSessions);
+
+        if (assignedCount > 0) {
+            // Find which other patterns this overlaps with (lower priority patterns that also detected these sessions)
+            const overlappingPatterns = diagnoses
+                .filter(d => getPatternPriority(d.pattern_id) > getPatternPriority(diagnosis.pattern_id))
+                .filter(d => (d.estimated_impact.affected_session_count || 0) > 0)
+                .map(d => ({ patternId: d.pattern_id, label: d.label }));
+
+            dominantPatternCounts.push({
+                patternId: diagnosis.pattern_id,
+                pattern: diagnosis,
+                dominantCount: assignedCount,
+                totalAffected: originalAffected,
+                overlaps: overlappingPatterns
+            });
+
+            remainingSessions -= assignedCount;
         }
+    });
 
-        return {
-            name: d.label,
-            value: d.estimated_impact.affected_session_count || 0,
-            color: color
-        };
-    }).sort((a, b) => b.value - a.value);
+    // Color mapping for patterns
+    const getPatternColor = (label: string): string => {
+        if (label.includes('Trust') || label.includes('Risk') || label.includes('Social Proof')) {
+            return '#DC2626'; // Red-600 for Trust/Risk (Critical)
+        } else if (label.includes('Comparison') || label.includes('Paralysis')) {
+            return '#F59E0B'; // Amber-500 for Comparison Paralysis
+        } else if (label.includes('Impulse') || label.includes('Ambient') || label.includes('Shopping')) {
+            return '#3B82F6'; // Blue-500 for Ambient Shopping
+        }
+        return '#9CA3AF'; // Gray-400 default
+    };
 
-    const affectedTotal = patternData.reduce((sum, p) => sum + p.value, 0);
-    const healthyOrOther = Math.max(0, sessionCount - affectedTotal);
+    // Prepare data for the single stacked bar
+    const stackedBarData = dominantPatternCounts.map(item => ({
+        name: item.pattern.label,
+        patternId: item.patternId,
+        value: item.dominantCount,
+        totalAffected: item.totalAffected,
+        percentage: ((item.dominantCount / sessionCount) * 100).toFixed(1),
+        color: getPatternColor(item.pattern.label),
+        overlaps: item.overlaps,
+        diagnosis: item.pattern
+    }));
+
+    const totalAffected = dominantPatternCounts.reduce((sum, item) => sum + item.dominantCount, 0);
+    const healthyCount = sessionCount - totalAffected;
 
     // Sort diagnoses by Priority Score (already sorted by revenue_at_risk in backend)
     const sortedDiagnoses = [...diagnoses].sort((a, b) => (b.revenue_at_risk || 0) - (a.revenue_at_risk || 0));
@@ -106,43 +167,121 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
                     </p>
                 </section>
 
-                {/* 3. Messy Middle Map */}
+                {/* 3. Triage Stack - Single Stacked Bar */}
                 <section>
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">Where sessions are getting stuck</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Where sessions are getting stuck</h2>
+                    <p className="text-sm text-gray-500 mb-4">
+                        Each session is categorized by its most critical issue{' '}
+                        <span className="font-medium text-gray-700">(checkout issues take priority over browsing friction)</span>
+                    </p>
+
                     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        <div className="h-16 w-full rounded-lg overflow-hidden flex">
-                            {patternData.map((p, idx) => (
-                                <div
-                                    key={idx}
-                                    style={{ width: `${(p.value / sessionCount) * 100}%`, backgroundColor: p.color }}
-                                    className="h-full border-r border-white/20 first:rounded-l-lg"
-                                    title={`${p.name}: ${p.value} sessions`}
-                                />
-                            ))}
-                            {/* Healthy/Other segment */}
-                            <div
-                                style={{ width: `${(healthyOrOther / sessionCount) * 100}%` }}
-                                className="h-full bg-gray-200 last:rounded-r-lg"
-                                title={`Other / Healthy: ${healthyOrOther} sessions`}
-                            />
+                        {/* Single Stacked Bar */}
+                        <div className="relative">
+                            <div className="h-20 w-full rounded-lg overflow-hidden flex shadow-inner border border-gray-200">
+                                {stackedBarData.map((segment, idx) => (
+                                    <div
+                                        key={segment.patternId}
+                                        style={{
+                                            width: `${segment.percentage}%`,
+                                            backgroundColor: segment.color
+                                        }}
+                                        className="h-full relative group cursor-pointer transition-all hover:brightness-110"
+                                        onClick={() => setSelectedDiagnosis(segment.diagnosis)}
+                                    >
+                                        {/* Hover Tooltip */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                            <div className="bg-gray-900 text-white text-xs rounded-lg py-2.5 px-3.5 shadow-xl whitespace-nowrap">
+                                                <div className="font-bold mb-1.5">{segment.name}</div>
+                                                <div className="text-gray-200">
+                                                    <strong>Primary:</strong> {segment.value} sessions ({segment.percentage}%)
+                                                </div>
+                                                {segment.totalAffected > segment.value && (
+                                                    <div className="text-gray-400 text-[10px] mt-1.5 pt-1.5 border-t border-gray-700">
+                                                        Also detected: {segment.totalAffected - segment.value} more sessions
+                                                        <br />(assigned to higher priority patterns)
+                                                    </div>
+                                                )}
+                                                {segment.overlaps.length > 0 && (
+                                                    <div className="text-gray-400 text-[10px] mt-1.5 pt-1.5 border-t border-gray-700">
+                                                        May overlap with: {segment.overlaps.map(o => o.label.split(/[(&]/)[0].trim()).join(', ')}
+                                                    </div>
+                                                )}
+                                                <div className="text-gray-500 text-[10px] mt-1.5 pt-1.5 border-t border-gray-700">
+                                                    💡 Click to view full details
+                                                </div>
+                                                {/* Tooltip arrow */}
+                                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                                                    <div className="border-8 border-transparent border-t-gray-900"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Percentage label inside bar (only if wide enough) */}
+                                        {parseFloat(segment.percentage) > 8 && (
+                                            <div className="h-full flex items-center justify-center">
+                                                <span className="text-white font-bold text-sm px-2 drop-shadow-sm">
+                                                    {segment.percentage}%
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Healthy/Other segment */}
+                                {healthyCount > 0 && (
+                                    <div
+                                        style={{ width: `${((healthyCount / sessionCount) * 100).toFixed(1)}%` }}
+                                        className="h-full bg-emerald-50 border-l border-emerald-200 flex items-center justify-center relative group cursor-default"
+                                    >
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                            <div className="bg-gray-900 text-white text-xs rounded-lg py-2.5 px-3.5 shadow-xl whitespace-nowrap">
+                                                <div className="font-bold mb-1.5">✅ Healthy Sessions</div>
+                                                <div className="text-gray-200">
+                                                    {healthyCount} sessions ({((healthyCount / sessionCount) * 100).toFixed(1)}%)
+                                                </div>
+                                                <div className="text-gray-400 text-[10px] mt-1.5 pt-1.5 border-t border-gray-700">
+                                                    No major friction patterns detected
+                                                </div>
+                                                {/* Tooltip arrow */}
+                                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                                                    <div className="border-8 border-transparent border-t-gray-900"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {((healthyCount / sessionCount) * 100) > 8 && (
+                                            <span className="text-emerald-700 font-bold text-sm">
+                                                {((healthyCount / sessionCount) * 100).toFixed(1)}%
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Legend */}
-                        <div className="mt-4 flex flex-wrap gap-4 justify-center">
-                            {patternData.map((p, idx) => (
-                                <div key={idx} className="flex items-center gap-2 cursor-pointer hover:opacity-75" onClick={() => {
-                                    const d = diagnoses.find(diag => diag.label === p.name);
-                                    if (d) setSelectedDiagnosis(d);
-                                }}>
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }}></div>
-                                    <span className="text-sm font-medium text-gray-700">{p.name}</span>
-                                    <span className="text-sm text-gray-500">({Math.round((p.value / sessionCount) * 100)}%)</span>
-                                </div>
+                        <div className="mt-6 flex flex-wrap gap-4 justify-center">
+                            {stackedBarData.map((segment) => (
+                                <button
+                                    key={segment.patternId}
+                                    onClick={() => setSelectedDiagnosis(segment.diagnosis)}
+                                    className="flex items-center gap-2 cursor-pointer hover:opacity-75 transition-opacity group"
+                                >
+                                    <div className="w-4 h-4 rounded-sm shadow-sm" style={{ backgroundColor: segment.color }}></div>
+                                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                                        {segment.name}
+                                    </span>
+                                    <span className="text-sm text-gray-500">
+                                        ({segment.value} · {segment.percentage}%)
+                                    </span>
+                                </button>
                             ))}
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-gray-200"></div>
-                                <span className="text-sm font-medium text-gray-700">Other / Unclassified</span>
-                                <span className="text-sm text-gray-500">({Math.round((healthyOrOther / sessionCount) * 100)}%)</span>
+                                <div className="w-4 h-4 rounded-sm bg-emerald-50 border border-emerald-200"></div>
+                                <span className="text-sm font-medium text-gray-700">Healthy Sessions</span>
+                                <span className="text-sm text-gray-500">
+                                    ({healthyCount} · {((healthyCount / sessionCount) * 100).toFixed(1)}%)
+                                </span>
                             </div>
                         </div>
                     </div>

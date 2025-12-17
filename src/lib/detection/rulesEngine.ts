@@ -49,22 +49,44 @@ export function evaluatePattern(
 
     totalScore += bonusPoints;
 
-    // Determine confidence level
+    // ========================================================================
+    // NORMALIZED CONFIDENCE SCORING
+    // ========================================================================
+    // Calculate normalized confidence percentage using saturation_threshold
+    // This ensures consistent confidence interpretation across all patterns
+    //
+    // Formula: confidence% = min(100, (rawScore / saturation_threshold) * 100)
+    //
+    // Example with Trust/Risk (saturation = 45):
+    //   - Raw score 40 → 40/45 * 100 = 88% → HIGH confidence
+    //
+    // Example with Comparison Paralysis (saturation = 75):
+    //   - Raw score 40 → 40/75 * 100 = 53% → MEDIUM confidence
+    //
+    // This allows business-aligned priorities:
+    //   - Trust/Risk has lower saturation → easier to reach HIGH (revenue-critical)
+    //   - Comparison Paralysis has higher saturation → needs more evidence
+    // ========================================================================
+
+    const saturationThreshold = pattern.detection_rules.saturation_threshold;
+    const normalizedScore = Math.min(100, (totalScore / saturationThreshold) * 100);
+
+    // Determine confidence level using normalized percentage thresholds
     const { high, medium, low } = pattern.detection_rules.confidence_thresholds;
     let confidence: 'high' | 'medium' | 'low' | 'none' = 'none';
 
-    if (totalScore >= high) {
+    if (normalizedScore >= high) {
         confidence = 'high';
-    } else if (totalScore >= medium) {
+    } else if (normalizedScore >= medium) {
         confidence = 'medium';
-    } else if (totalScore >= low) {
+    } else if (normalizedScore >= low) {
         confidence = 'low';
     }
 
     return {
         detected: confidence !== 'none',
         confidence,
-        confidenceScore: Math.min(totalScore, 100),
+        confidenceScore: Math.round(normalizedScore), // Return normalized % (0-100)
         triggeredRules,
         bonusPoints,
     };
@@ -130,6 +152,13 @@ function getMetricValue(metricId: string, metrics: SessionMetrics): number | und
         return_views: 'return_views',
         search_count: 'search_count',
         avg_time_per_product: 'avg_time_per_product',
+        pogo_stick_count: 'pogo_stick_count',
+        evaluation_interaction_count: 'evaluation_interaction_count',
+        // Ambient Shopping Metrics
+        category_count: 'category_count',
+        long_dwell_count: 'long_dwell_count',
+        blog_views: 'blog_views',
+        return_sessions_7d: 'return_sessions_7d',
         // New Trust/Risk Metrics
         reached_checkout: 'reached_checkout',
         completed_purchase: 'completed_purchase',

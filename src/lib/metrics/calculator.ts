@@ -166,6 +166,25 @@ export function calculateSessionMetrics(
     const policyBrandViews = policyViews + brandTrustViews;
     const negativeReviewFocus = 0; // Placeholder until sentiment analysis is added
 
+    // --- Ambient Shopping Metrics ---
+
+    // Long Dwell Count - products with >60s viewing time OR viewed multiple times
+    // For simplicity, we'll count products that appear in return_views (viewed multiple times)
+    const long_dwell_count = return_views;
+
+    // Blog Views - content/editorial page views
+    const blog_views = events.filter(e =>
+        e.page_location && /\/blog\/|\/journal\/|\/pages\/|\/content\//i.test(e.page_location)
+    ).length;
+
+    // Category Count - number of unique categories viewed
+    const category_count = categories_viewed.length;
+
+    // Return Sessions 7d - requires cross-session analysis
+    // This should be calculated at a higher level (grouping by user_pseudo_id)
+    // For now, defaulting to 1 (current session). This will need to be enhanced.
+    const return_sessions_7d = 1;
+
     return {
         session_id: sessionId,
         products_viewed,
@@ -183,6 +202,11 @@ export function calculateSessionMetrics(
         evaluation_interaction_count,
         categories_viewed,
         primary_category,
+        category_count,
+        // Ambient Shopping Metrics
+        long_dwell_count,
+        blog_views,
+        return_sessions_7d,
         // New Metrics
         reached_checkout: reachedCheckout,
         completed_purchase: completedPurchase,
@@ -227,9 +251,12 @@ export function calculateAggregateMetrics(
             date_range_start: dateRangeStart || '',
             date_range_end: dateRangeEnd || '',
             avg_products_viewed: 0,
-            avg_session_duration: 0,
+            avg_add_to_cart_count: 0,
+            avg_session_duration_minutes: 0,
             avg_view_to_cart_rate: 0,
             avg_same_category_ratio: 0,
+            store_conversion_rate: 0,
+            checkout_completion_rate: 0,
             avg_category_switches: 0,
             avg_price_range_cv: 0,
             avg_return_views: 0,
@@ -242,7 +269,7 @@ export function calculateAggregateMetrics(
     const avg = (arr: number[]) => sum(arr) / arr.length;
 
     const avg_products_viewed = avg(filteredSessions.map(s => s.products_viewed));
-    const avg_session_duration = avg(filteredSessions.map(s => s.session_duration_minutes));
+    const avg_session_duration_minutes = avg(filteredSessions.map(s => s.session_duration_minutes));
     const avg_view_to_cart_rate = avg(filteredSessions.map(s => s.view_to_cart_rate));
     const avg_same_category_ratio = avg(filteredSessions.map(s => s.same_category_views_ratio));
     const avg_category_switches = avg(filteredSessions.map(s => s.category_switches));
@@ -257,9 +284,12 @@ export function calculateAggregateMetrics(
         date_range_start: dateRangeStart || '',
         date_range_end: dateRangeEnd || '',
         avg_products_viewed: Math.round(avg_products_viewed * 100) / 100,
-        avg_session_duration: Math.round(avg_session_duration * 100) / 100,
+        avg_add_to_cart_count: 0,
+        avg_session_duration_minutes: Math.round(avg_session_duration_minutes * 100) / 100,
         avg_view_to_cart_rate: Math.round(avg_view_to_cart_rate * 100) / 100,
         avg_same_category_ratio: Math.round(avg_same_category_ratio * 100) / 100,
+        store_conversion_rate: 0,
+        checkout_completion_rate: 0,
         avg_category_switches: Math.round(avg_category_switches * 100) / 100,
         avg_price_range_cv: Math.round(avg_price_range_cv * 100) / 100,
         avg_return_views: Math.round(avg_return_views * 100) / 100,

@@ -177,10 +177,11 @@ export const comparisonParalysisPattern: Pattern = {
             }
         ],
         confidence_thresholds: {
-            high: 70,
-            medium: 40,
-            low: 25,
+            high: 75,   // 75% normalized confidence
+            medium: 40, // 40% normalized confidence
+            low: 20,    // 20% normalized confidence
         },
+        saturation_threshold: 75, // Requires ~2 strong rules (e.g., Rule A + Rule B) to hit 100% confidence
         bonus_conditions: [
             {
                 description: 'Extended time per product (deep evaluation)',

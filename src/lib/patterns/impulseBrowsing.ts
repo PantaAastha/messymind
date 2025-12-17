@@ -6,6 +6,8 @@ export const impulseBrowsingPattern: Pattern = {
     label: 'Impulse Browsing (Low Intent)',
     category: 'Attention & Intent',
     description: 'Shoppers browse a few items quickly but leave without showing deep purchase intent. These users are often in discovery mode (e.g., from social media) and are not ready to buy yet. The goal is to capture interest (email, wishlist) rather than force a sale.',
+    behavioral_stage: 'pre_intent',
+    expected_conversion_rate: 0.02,
 
     inputs_schema: {
         essential: [
