@@ -28,18 +28,30 @@ export function evaluatePattern(
     pattern: Pattern,
     metrics: SessionMetrics
 ): DetectionResult {
-    let totalScore = 0;
-    const triggeredRules: string[] = [];
+    // Debug logging for Value Uncertainty
+    if (pattern.pattern_id === 'value_uncertainty') {
+        console.log('🔍 Evaluating Value Uncertainty:', {
+            session_id: metrics.session_id,
+            view_cart_count: metrics.view_cart_count,
+            cart_stall_duration: metrics.cart_stall_duration,
+            sale_page_views: metrics.sale_page_views,
+            add_to_cart_count: metrics.add_to_cart_count,
+            shipping_policy_views: metrics.policy_views,
+            completed_purchase: metrics.completed_purchase,
+        });
+    }
 
     // Evaluate each rule
-    for (const rule of pattern.detection_rules.rules) {
-        const result = evaluateRule(rule, metrics);
+    const ruleResults = pattern.detection_rules.rules.map(rule =>
+        evaluateRule(rule, metrics)
+    );
 
-        if (result.triggered) {
-            totalScore += result.weight;
-            triggeredRules.push(result.ruleId);
-        }
-    }
+    // Calculate total score from triggered rules
+    const triggeredRules = ruleResults.filter(r => r.triggered).map(r => r.ruleId);
+    const totalScore = triggeredRules.reduce((sum, ruleId) => {
+        const rule = ruleResults.find(r => r.ruleId === ruleId);
+        return sum + (rule ? rule.weight : 0);
+    }, 0);
 
     // Evaluate bonus conditions
     const bonusPoints = evaluateBonusConditions(
@@ -47,7 +59,7 @@ export function evaluatePattern(
         metrics
     );
 
-    totalScore += bonusPoints;
+    const totalScoreWithBonus = totalScore + bonusPoints;
 
     // ========================================================================
     // NORMALIZED CONFIDENCE SCORING
@@ -69,7 +81,7 @@ export function evaluatePattern(
     // ========================================================================
 
     const saturationThreshold = pattern.detection_rules.saturation_threshold;
-    const normalizedScore = Math.min(100, (totalScore / saturationThreshold) * 100);
+    const normalizedScore = Math.min(100, (totalScoreWithBonus / saturationThreshold) * 100);
 
     // Determine confidence level using normalized percentage thresholds
     const { high, medium, low } = pattern.detection_rules.confidence_thresholds;
@@ -159,7 +171,7 @@ function getMetricValue(metricId: string, metrics: SessionMetrics): number | und
         long_dwell_count: 'long_dwell_count',
         blog_views: 'blog_views',
         return_sessions_7d: 'return_sessions_7d',
-        // New Trust/Risk Metrics
+        // Trust/Risk Metrics
         reached_checkout: 'reached_checkout',
         completed_purchase: 'completed_purchase',
         has_intent: 'has_intent',
@@ -168,6 +180,11 @@ function getMetricValue(metricId: string, metrics: SessionMetrics): number | und
         fit_guide_views: 'fit_guide_views',
         brand_trust_views: 'brand_trust_views',
         time_on_cart_checkout: 'time_on_cart_checkout',
+        // Value Uncertainty Metrics
+        view_cart_count: 'view_cart_count',
+        cart_stall_duration: 'cart_stall_duration',
+        sale_page_views: 'sale_page_views',
+        shipping_policy_views: 'policy_views', // Maps to existing policy_views metric
         // Composite
         total_reassurance_touches: 'total_reassurance_touches',
         policy_brand_views: 'policy_brand_views',

@@ -1,14 +1,14 @@
 import { comparisonParalysisPattern } from './comparisonParalysis';
-import { impulseBrowsingPattern } from './impulseBrowsing';
 import { trustRiskSocialProofPattern } from './trustRiskSocialProof';
 import { ambientShoppingPattern } from './ambientShopping';
+import { valueUncertaintyPattern } from './valueUncertainty';
 import type { Pattern } from '@/types/pattern';
 
 export const ALL_PATTERNS: Pattern[] = [
     comparisonParalysisPattern,
-    impulseBrowsingPattern,
     trustRiskSocialProofPattern,
     ambientShoppingPattern,
+    valueUncertaintyPattern,
 ];
 
 export function getPatternById(id: string): Pattern | undefined {

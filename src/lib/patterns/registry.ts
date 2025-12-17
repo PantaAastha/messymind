@@ -8,41 +8,47 @@ import type { Pattern } from '@/types/pattern';
 import { comparisonParalysisPattern } from './comparisonParalysis';
 import { trustRiskSocialProofPattern } from './trustRiskSocialProof';
 import { ambientShoppingPattern } from './ambientShopping';
+import { valueUncertaintyPattern } from './valueUncertainty';
 
-// Registry of all patterns
-const patternRegistry: Record<string, Pattern> = {
-    comparison_paralysis: comparisonParalysisPattern,
-    trust_risk_social_proof: trustRiskSocialProofPattern,
-    ambient_shopping: ambientShoppingPattern,
-    // Future patterns will be added here:
-    // value_uncertainty: valueUncertaintyPattern,
-    // etc.
-};
+// ============================================================================
+// PATTERN REGISTRY
+// ============================================================================
+
+/**
+ * Central registry for all behavioral patterns.
+ * Add new patterns here to make them available for diagnostic detection.
+ */
+const PATTERN_REGISTRY: Pattern[] = [
+    comparisonParalysisPattern,
+    trustRiskSocialProofPattern,
+    ambientShoppingPattern,
+    valueUncertaintyPattern,
+];
 
 /**
  * Get all registered patterns
  */
 export function getAllPatterns(): Pattern[] {
-    return Object.values(patternRegistry);
+    return PATTERN_REGISTRY;
 }
 
 /**
- * Get a pattern by its ID
+ * Get pattern by ID
  */
 export function getPatternById(patternId: string): Pattern | undefined {
-    return patternRegistry[patternId];
+    return PATTERN_REGISTRY.find(p => p.pattern_id === patternId);
 }
 
 /**
  * Get patterns by category
  */
 export function getPatternsByCategory(category: string): Pattern[] {
-    return getAllPatterns().filter(pattern => pattern.category === category);
+    return PATTERN_REGISTRY.filter(p => p.category === category);
 }
 
 /**
- * Check if a pattern exists
+ * Get patterns by behavioral stage
  */
-export function patternExists(patternId: string): boolean {
-    return patternId in patternRegistry;
+export function getPatternsByStage(stage: 'pre_intent' | 'post_intent'): Pattern[] {
+    return PATTERN_REGISTRY.filter(p => p.behavioral_stage === stage);
 }

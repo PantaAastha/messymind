@@ -33,9 +33,10 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
 
     // Define pattern priority with explicit mapping (lower number = higher priority)
     const PATTERN_PRIORITY: Record<string, number> = {
-        'trust_risk_social_proof': 1,
-        'comparison_paralysis': 2,
-        'ambient_shopping': 3,
+        'trust_risk_social_proof': 1,  // Highest - checkout abandonment
+        'value_uncertainty': 2,         // High - cart hesitation / price concerns
+        'comparison_paralysis': 3,      // Medium - decision friction
+        'ambient_shopping': 4,          // Low - browsing behavior
     };
 
     const getPatternPriority = (patternId: string): number => {
@@ -91,6 +92,8 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
     const getPatternColor = (label: string): string => {
         if (label.includes('Trust') || label.includes('Risk') || label.includes('Social Proof')) {
             return '#DC2626'; // Red-600 for Trust/Risk (Critical)
+        } else if (label.includes('Value') || label.includes('Uncertainty') || label.includes('Price')) {
+            return '#A855F7'; // Purple-500 for Value Uncertainty (High Priority)
         } else if (label.includes('Comparison') || label.includes('Paralysis')) {
             return '#F59E0B'; // Amber-500 for Comparison Paralysis
         } else if (label.includes('Impulse') || label.includes('Ambient') || label.includes('Shopping')) {

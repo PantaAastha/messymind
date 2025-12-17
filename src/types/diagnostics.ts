@@ -54,6 +54,11 @@ export interface SessionMetrics {
     brand_trust_views: number;
     time_on_cart_checkout: number; // minutes
 
+    // Value Uncertainty Metrics
+    view_cart_count: number; // Number of view_cart events
+    cart_stall_duration: number; // Time spent on cart page in seconds
+    sale_page_views: number; // Views of sale/clearance/promotion pages
+
     // Composite Metrics (for Rules Engine)
     total_reassurance_touches: number;
     policy_brand_views: number;

@@ -116,9 +116,9 @@ export function calculateSessionMetrics(
 
     // --- Trust & Risk Metrics Calculation ---
 
-    // Policy Views
-    const policyViews = viewEvents.filter(e =>
-        e.page_location && /refund|return|shipping|terms|privacy|guarantee/i.test(e.page_location)
+    // Policy Views - check ALL events, not just view_item events
+    const policyViews = events.filter(e =>
+        e.page_location && /refund|return|shipping|terms|privacy|guarantee|taxes/i.test(e.page_location)
     ).length;
 
     // Review Interactions
@@ -185,6 +185,36 @@ export function calculateSessionMetrics(
     // For now, defaulting to 1 (current session). This will need to be enhanced.
     const return_sessions_7d = 1;
 
+    // --- Value Uncertainty Metrics ---
+
+    // View Cart Count - detect from both view_cart events AND cart page views
+    // Standard GA4 doesn't always have view_cart, so we check page_location too
+    const viewCartEvents = events.filter(e =>
+        e.event_name === 'view_cart' ||
+        (e.page_location && /\/cart/i.test(e.page_location) && e.event_name === 'page_view')
+    );
+    const view_cart_count = viewCartEvents.length;
+
+    // Cart Stall Duration - time spent on cart page in seconds
+    // Use the same cart page detection logic
+    const cartPageEvents = events.filter(e =>
+        e.event_name === 'view_cart' ||
+        (e.page_location && /\/cart/i.test(e.page_location))
+    );
+    let cart_stall_duration = 0;
+    if (cartPageEvents.length > 1) {
+        const first = parseTimestamp(cartPageEvents[0].event_timestamp)?.getTime() || 0;
+        const last = parseTimestamp(cartPageEvents[cartPageEvents.length - 1].event_timestamp)?.getTime() || 0;
+        if (first > 0 && last > 0) {
+            cart_stall_duration = (last - first) / 1000; // Convert to seconds
+        }
+    }
+
+    // Sale Page Views - visits to sale/clearance/promotions pages
+    const sale_page_views = events.filter(e =>
+        e.page_location && /\/sale|\/clearance|\/promotions|\/deals/i.test(e.page_location)
+    ).length;
+
     return {
         session_id: sessionId,
         products_viewed,
@@ -216,6 +246,10 @@ export function calculateSessionMetrics(
         fit_guide_views: fitGuideViews,
         brand_trust_views: brandTrustViews,
         time_on_cart_checkout: Math.round(timeOnCartCheckout * 100) / 100,
+        // Value Uncertainty Metrics
+        view_cart_count,
+        cart_stall_duration: Math.round(cart_stall_duration * 100) / 100,
+        sale_page_views,
         // Composite
         total_reassurance_touches: totalReassuranceTouches,
         policy_brand_views: policyBrandViews,
