@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MessyMind - Messy Middle Diagnostic Tool",
   description: "Detect psychological friction patterns in your e-commerce customer journey",
+  icons: {
+    icon: '/MMlogo.png',
+    apple: '/MMlogo.png',
+  },
 };
 
 export default function RootLayout({
