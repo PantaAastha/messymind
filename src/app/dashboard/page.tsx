@@ -46,24 +46,28 @@ export default async function DashboardPage() {
     return (
         <div className="min-h-screen bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Diagnostic Sessions</h1>
-                    <p className="text-gray-600">View and manage your behavioral pattern analyses</p>
-                </div>
+                {/* Header - Only show when there are sessions */}
+                {sessionsWithCounts.length > 0 && (
+                    <>
+                        <div className="mb-8">
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Diagnostic Sessions</h1>
+                            <p className="text-gray-600">View and manage your behavioral pattern analyses</p>
+                        </div>
 
-                {/* CTA to create new */}
-                <div className="mb-8">
-                    <Link
-                        href="/upload"
-                        className="inline-flex items-center px-6 py-3 bg-[#03AC13] text-white rounded-lg hover:bg-[#74B72E] transition-all font-semibold shadow-sm cursor-pointer"
-                    >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        New Analysis
-                    </Link>
-                </div>
+                        {/* CTA to create new */}
+                        <div className="mb-8">
+                            <Link
+                                href="/upload"
+                                className="inline-flex items-center px-6 py-3 bg-[#03AC13] text-white rounded-lg hover:bg-[#74B72E] transition-all font-semibold shadow-sm cursor-pointer"
+                            >
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                New Analysis
+                            </Link>
+                        </div>
+                    </>
+                )}
 
                 {/* Sessions Grid */}
                 {sessionsWithCounts.length === 0 ? (

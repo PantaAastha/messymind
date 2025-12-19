@@ -9,9 +9,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FileUploader from '@/components/upload/FileUploader';
+import { ProcessingOverlay } from '@/components/results/ProcessingOverlay';
 import { generateSampleGA4Data, eventsToCSV, downloadCSV } from '@/lib/csv/sampleDataGenerator';
 import { validateGA4Events } from '@/lib/csv/parser';
 import type { GA4Event, CSVValidationResult } from '@/types/csv';
+
+type ProcessingStage = 'uploading' | 'parsing' | 'analyzing' | 'complete' | null;
 
 export default function UploadPage() {
     const router = useRouter();
@@ -19,6 +22,7 @@ export default function UploadPage() {
     const [validation, setValidation] = useState<CSVValidationResult | null>(null);
     const [sessionName, setSessionName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [processingStage, setProcessingStage] = useState<ProcessingStage>(null);
 
     const handleUploadComplete = (uploadedEvents: GA4Event[], uploadedValidation: CSVValidationResult) => {
         setEvents(uploadedEvents);
@@ -61,6 +65,7 @@ export default function UploadPage() {
         if (!events || !sessionName.trim()) return;
 
         setIsSubmitting(true);
+        setProcessingStage('uploading');
 
         try {
             const response = await fetch('/api/upload', {
@@ -77,12 +82,20 @@ export default function UploadPage() {
                 throw new Error('Upload failed');
             }
 
+            setProcessingStage('parsing');
+            await new Promise(resolve => setTimeout(resolve, 600));
+
+            setProcessingStage('analyzing');
             const { sessionId } = await response.json();
+
+            setProcessingStage('complete');
+            await new Promise(resolve => setTimeout(resolve, 400));
 
             // Redirect to processing/results page
             router.push(`/results/${sessionId}`);
         } catch (error) {
             console.error('Upload error:', error);
+            setProcessingStage(null);
             alert('Failed to upload data. Please try again.');
         } finally {
             setIsSubmitting(false);
@@ -257,6 +270,9 @@ export default function UploadPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Processing Overlay */}
+            {processingStage && <ProcessingOverlay stage={processingStage} />}
         </div>
     );
 }

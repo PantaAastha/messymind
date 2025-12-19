@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { DiagnosisOutput, AggregateMetrics } from '@/types/diagnostics';
 import { PriorityCard } from './PriorityCard';
@@ -292,19 +293,68 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
 
                 {/* 4. Priority List */}
                 <section>
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Prioritized Diagnosis</h2>
+                    {sortedDiagnoses.length > 0 && (
+                        <h2 className="text-xl font-bold text-gray-900 mb-6">Prioritized Diagnosis</h2>
+                    )}
                     <div className="space-y-4">
                         {sortedDiagnoses.length === 0 ? (
-                            <div className="bg-white p-12 rounded-xl border border-gray-200 shadow-sm text-center">
-                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-12 text-center">
+                                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                    <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Patterns Detected</h3>
-                                <p className="text-gray-500 max-w-sm mx-auto">
-                                    We analyzed your sessions and didn't find specific behavioral friction patterns like comparison paralysis. This suggests your "messy middle" is relatively clean!
+
+                                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                                    🎉 Clean Bill of Health!
+                                </h3>
+
+                                <p className="text-gray-600 mb-6 max-w-xl mx-auto leading-relaxed">
+                                    Great news! We analyzed <strong>{sessionCount.toLocaleString()} sessions</strong> and didn&apos;t detect
+                                    major behavioral friction patterns like comparison paralysis or trust hesitation.
+                                    Your customer journey appears to be working smoothly.
                                 </p>
+
+                                {/* What This Means */}
+                                <div className="bg-white rounded-lg p-6 mb-6 max-w-2xl mx-auto shadow-sm">
+                                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center justify-center gap-2">
+                                        <span className="text-green-600">💡</span>
+                                        What This Means
+                                    </h4>
+                                    <ul className="text-sm text-gray-700 space-y-2 text-left">
+                                        <li className="flex items-start gap-3">
+                                            <span className="text-green-600 font-bold mt-0.5">•</span>
+                                            <span>Your conversion rate ({(aggregateMetrics.store_conversion_rate * 100).toFixed(1)}%) is within healthy range</span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <span className="text-green-600 font-bold mt-0.5">•</span>
+                                            <span>Shoppers are moving through your funnel without major friction</span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <span className="text-green-600 font-bold mt-0.5">•</span>
+                                            <span>No significant trust or decision-making barriers detected</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                {/* Next Steps */}
+                                <div className="space-y-3">
+                                    <p className="text-sm font-medium text-gray-700">Want to optimize further?</p>
+                                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                        <Link href="/dashboard" className="btn-secondary inline-flex items-center justify-center gap-2">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            </svg>
+                                            View All Analyses
+                                        </Link>
+                                        <Link href="/upload" className="btn-primary inline-flex items-center justify-center gap-2">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Analyze Another Period
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             sortedDiagnoses.map((d) => (
