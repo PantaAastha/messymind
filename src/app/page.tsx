@@ -28,23 +28,23 @@ export default async function HomePage() {
       <div className="min-h-screen bg-background">
         <div className="max-w-6xl mx-auto px-6 py-16">
           {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center mb-8">
-              <div className="relative h-40 w-40">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center mb-6">
+              <div className="relative h-16 w-16">
                 <Image
                   src="/MMlogo.png"
                   alt="MessyMind"
-                  width={160}
-                  height={160}
+                  width={64}
+                  height={64}
                   className="object-contain"
                   priority
                 />
               </div>
             </div>
-            <p className="text-xl text-gray-600 mb-2">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Messy Middle Diagnostic Tool
-            </p>
-            <p className="text-lg text-gray-500">
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Detect psychological friction patterns in your e-commerce customer journey
             </p>
           </div>
@@ -113,16 +113,28 @@ export default async function HomePage() {
               Supported Behavioral Patterns
             </h3>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="border-l-4 border-brand-primary pl-4 py-2 hover:bg-brand-primary/5 transition-all rounded-r">
+              <div className="border-l-4 border-[#F59E0B] pl-4 py-2 hover:bg-[#F59E0B]/5 transition-all rounded-r">
                 <h4 className="font-semibold text-foreground mb-2">Comparison Paralysis</h4>
                 <p className="text-sm text-gray-500">
                   Shoppers explore many products but fail to commit due to decision overload
                 </p>
               </div>
-              <div className="border-l-4 border-brand-accent pl-4 py-2 hover:bg-brand-accent/5 transition-all rounded-r">
+              <div className="border-l-4 border-[#DC2626] pl-4 py-2 hover:bg-[#DC2626]/5 transition-all rounded-r">
                 <h4 className="font-semibold text-foreground mb-2">Trust & Risk Anxiety</h4>
                 <p className="text-sm text-gray-500">
                   Customers reach checkout but drop off due to trust, fit, or social proof concerns
+                </p>
+              </div>
+              <div className="border-l-4 border-[#3B82F6] pl-4 py-2 hover:bg-[#3B82F6]/5 transition-all rounded-r">
+                <h4 className="font-semibold text-foreground mb-2">Impulse Browsing / Ambient Shopping</h4>
+                <p className="text-sm text-gray-500">
+                  Shoppers browse for inspiration or entertainment rather than immediate purchase
+                </p>
+              </div>
+              <div className="border-l-4 border-[#A855F7] pl-4 py-2 hover:bg-[#A855F7]/5 transition-all rounded-r">
+                <h4 className="font-semibold text-foreground mb-2">Value Uncertainty / Price Hesitation</h4>
+                <p className="text-sm text-gray-500">
+                  Customers stall at cart due to price concerns and hunt for deals or discounts
                 </p>
               </div>
             </div>
