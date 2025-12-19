@@ -78,6 +78,10 @@ export function calculateSessionMetrics(
         fit_guide_views: 0, // Legacy calculator - not implemented
         brand_trust_views: 0, // Legacy calculator - not implemented
         time_on_cart_checkout: 0, // Legacy calculator - not implemented
+        // Value Uncertainty Metrics
+        view_cart_count: 0, // Legacy calculator - not implemented
+        cart_stall_duration: 0, // Legacy calculator - not implemented
+        sale_page_views: 0, // Legacy calculator - not implemented
         // Composite
         total_reassurance_touches: 0, // Legacy calculator - not implemented
         policy_brand_views: 0, // Legacy calculator - not implemented

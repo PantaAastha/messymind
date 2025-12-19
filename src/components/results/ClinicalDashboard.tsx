@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { DiagnosisOutput, AggregateMetrics } from '@/types/diagnostics';
 import { PriorityCard } from './PriorityCard';
 import { DiagnosticSheet } from './DiagnosticSheet';
 import { generateReportPDF } from '@/app/actions/generatePDF';
 import { base64ToBlob, downloadBlob } from '@/lib/pdf/utils';
+import { Badge } from '../ui/Badge';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 interface ClinicalDashboardProps {
     diagnoses: DiagnosisOutput[];
@@ -142,8 +143,14 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <StatTile
                             label="Store Conversion"
-                            value={aggregateMetrics ? `${(aggregateMetrics.store_conversion_rate * 100).toFixed(1)}%` : 'N/A'}
+                            value={aggregateMetrics ? `${(aggregateMetrics.store_conversion_rate * 100).toFixed(1)}% ` : 'N/A'}
                             benchmark="2-3%"
+                            quality={{
+                                isDefault: !diagnoses[0]?.estimated_impact?.conversion_is_calculated,
+                                warning: !diagnoses[0]?.estimated_impact?.conversion_is_calculated
+                                    ? 'No purchases found'
+                                    : undefined
+                            }}
                         />
                         <StatTile
                             label="Total Revenue at Risk"
@@ -152,13 +159,13 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
                         />
                         <StatTile
                             label="Add-to-Cart Rate"
-                            value={`${(aggregateMetrics?.avg_view_to_cart_rate * 100).toFixed(1)}%`}
+                            value={`${(aggregateMetrics?.avg_view_to_cart_rate * 100).toFixed(1)}% `}
                             benchmark="6-11%"
                             highlight={aggregateMetrics?.avg_view_to_cart_rate < 0.05}
                         />
                         <StatTile
                             label="Checkout Completion"
-                            value={aggregateMetrics ? `${(aggregateMetrics.checkout_completion_rate * 100).toFixed(1)}%` : 'N/A'}
+                            value={aggregateMetrics ? `${(aggregateMetrics.checkout_completion_rate * 100).toFixed(1)}% ` : 'N/A'}
                             benchmark="70-75%"
                         />
                         <StatTile
@@ -187,7 +194,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
                                     <div
                                         key={segment.patternId}
                                         style={{
-                                            width: `${segment.percentage}%`,
+                                            width: `${segment.percentage}% `,
                                             backgroundColor: segment.color
                                         }}
                                         className="h-full relative group cursor-pointer transition-all hover:brightness-110"
@@ -235,7 +242,7 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
                                 {/* Healthy/Other segment */}
                                 {healthyCount > 0 && (
                                     <div
-                                        style={{ width: `${((healthyCount / sessionCount) * 100).toFixed(1)}%` }}
+                                        style={{ width: `${((healthyCount / sessionCount) * 100).toFixed(1)}% ` }}
                                         className="h-full bg-emerald-50 border-l border-emerald-200 flex items-center justify-center relative group cursor-default"
                                     >
                                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
@@ -381,13 +388,40 @@ export function ClinicalDashboard({ diagnoses, aggregateMetrics, sessionCount, s
     );
 }
 
-function StatTile({ label, value, benchmark, highlight }: { label: string, value: string, benchmark?: string, highlight?: boolean }) {
+function StatTile({
+    label,
+    value,
+    benchmark,
+    highlight,
+    quality
+}: {
+    label: string;
+    value: string;
+    benchmark?: string;
+    highlight?: boolean;
+    quality?: {
+        isDefault?: boolean;
+        warning?: string;
+        source?: string;
+    };
+}) {
     return (
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{label}</div>
-            <div className={`text-2xl font-bold mb-1 ${highlight ? 'text-red-500' : 'text-gray-900'}`}>{value}</div>
-            {benchmark && (
-                <div className="text-xs text-gray-400">Bench: {benchmark}</div>
+            <div className={`text - 2xl font - bold mb - 1 ${highlight ? 'text-red-500' : 'text-gray-900'} `}>{value}</div>
+
+            {/* Quality indicator */}
+            {quality?.isDefault && (
+                <Badge variant="warning" className="mb-1">⚠️ Using default</Badge>
+            )}
+            {quality?.source && quality.source !== 'default' && (
+                <div className="text-xs text-gray-500 mb-1">From: {quality.source}</div>
+            )}
+
+            {benchmark && <div className="text-xs text-gray-400">Bench: {benchmark}</div>}
+
+            {quality?.warning && (
+                <div className="text-xs text-orange-600 mt-1">{quality.warning}</div>
             )}
         </div>
     );

@@ -19,6 +19,11 @@ export interface GA4Event {
     item_category?: string;
     item_price?: number;
 
+    // Transaction data (for purchase events)
+    value?: number;        // Total transaction value (preferred for AOV)
+    currency?: string;     // ISO 4217 currency code (USD, EUR, etc.)
+    price?: number;        // Alternative transaction price field
+
     // Page data
     page_location?: string;
     page_title?: string;

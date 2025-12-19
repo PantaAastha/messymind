@@ -149,11 +149,14 @@ export function generateDiagnosis(
         primaryDrivers
     );
 
-    // Calculate priority score
+    // Calculate priority score with multi-factor weighting
+    // Note: We don't have all diagnoses yet during generation, so this will be recalculated later if needed
     const priorityScore = calculatePriorityScore(
         avgConfidenceScore,
-        estimatedImpact.affected_session_count,
-        allSessionMetrics.length
+        detectedSessions.length,
+        allSessionMetrics.length,
+        revenueAtRisk,
+        [] // Will be populated when sorting all diagnoses together
     );
 
     // Data quality
@@ -352,13 +355,54 @@ function generateSummary(
     return `Shoppers in ${scopeTarget} view an average of ${avgProducts} products over ${avgDuration} minutes but have a view-to-cart rate of only ${cartRate}%, significantly below industry norms. ${percentage}% of sessions show signs of ${pattern.label.toLowerCase()}, indicating shoppers are struggling to make decisions despite high engagement.`;
 }
 
+/**
+ * Calculate quick win score based on affected session count
+ * Fewer affected sessions = easier to fix = higher quick win score
+ */
+function calculateQuickWinScore(affectedCount: number): number {
+    if (affectedCount < 100) return 1.0;
+    if (affectedCount < 500) return 0.7;
+    if (affectedCount < 1000) return 0.4;
+    return 0.2;
+}
+
+/**
+ * Calculate multi-factor priority score
+ * - 40% Revenue at risk (most important for business)
+ * - 30% Confidence score (how sure we are this pattern exists)
+ * - 20% Impact (percentage of sessions affected)
+ * - 10% Quick wins (easier to fix patterns get bonus)
+ */
 function calculatePriorityScore(
     confidenceScore: number,
     affectedCount: number,
-    totalCount: number
+    totalCount: number,
+    revenueAtRisk: number = 0,
+    allDiagnoses: { revenue_at_risk?: number }[] = []
 ): number {
-    const impactScore = (affectedCount / totalCount) * 100;
+    // Weights
+    const revenueWeight = 0.4;
+    const confidenceWeight = 0.3;
+    const impactWeight = 0.2;
+    const quickWinWeight = 0.1;
 
-    // Priority = (Confidence * 0.6) + (Impact * 0.4)
-    return confidenceScore * 0.6 + impactScore * 0.4;
+    // Calculate max revenue for normalization
+    const maxRevenue = Math.max(
+        ...allDiagnoses.map(d => d.revenue_at_risk || 0),
+        revenueAtRisk,
+        1 // Prevent division by zero
+    );
+
+    // Normalize scores to 0-100 range
+    const revenueScore = (revenueAtRisk / maxRevenue) * 100;
+    const impactScore = (affectedCount / totalCount) * 100;
+    const quickWinScore = calculateQuickWinScore(affectedCount) * 100;
+
+    // Calculate weighted priority score
+    return (
+        revenueScore * revenueWeight +
+        confidenceScore * confidenceWeight +
+        impactScore * impactWeight +
+        quickWinScore * quickWinWeight
+    );
 }

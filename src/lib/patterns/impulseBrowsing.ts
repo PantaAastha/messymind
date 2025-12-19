@@ -71,7 +71,8 @@ export const impulseBrowsingPattern: Pattern = {
             high: 80,
             medium: 50,
             low: 30
-        }
+        },
+        saturation_threshold: 100
     },
 
     driver_definitions: [

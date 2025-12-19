@@ -4,6 +4,8 @@ import React from 'react';
 import type { DiagnosisOutput } from '@/types/diagnostics';
 import Link from 'next/link';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { Badge } from '../ui/Badge';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 interface PriorityCardProps {
     diagnosis: DiagnosisOutput;
@@ -35,32 +37,33 @@ export function PriorityCard({ diagnosis, isHighestRisk = false }: PriorityCardP
     }).format(revenue_at_risk);
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer group/card relative">
-            {/* Priority Badge - Top Left */}
-            <div className="absolute top-4 left-4 z-10">
-                {isHighestRisk ? (
-                    <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide flex items-center gap-1.5 shadow-sm border border-red-200">
-                        🔴 CRITICAL | Fix First
-                    </span>
-                ) : (
-                    <span className="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide flex items-center gap-1.5 shadow-sm border border-yellow-200">
-                        ⚠️ MEDIUM PRIORITY
-                    </span>
-                )}
-            </div>
-
-            <div className="p-6 pt-16">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group/card relative">
+            <div className="p-6">
                 {/* Header Row */}
                 <div className="flex flex-col gap-4 mb-6">
                     <div className="flex items-start justify-between gap-3">
                         <h3 className="text-xl font-bold text-gray-900">{label}</h3>
 
-                        {/* Confidence Chip */}
-                        {confidence === 'high' && (
-                            <span className="border border-gray-200 text-gray-500 px-2 py-0.5 rounded text-[10px] font-medium uppercase flex-shrink-0">
-                                High Confidence
-                            </span>
-                        )}
+                        {/* Badges - Right aligned */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Quick Win Badge */}
+                            {estimated_impact.affected_session_count < 500 && (
+                                <Tooltip text="Quick Win: Affects fewer than 500 sessions, making it easier and faster to implement fixes">
+                                    <Badge variant="success" className="flex items-center gap-1 cursor-help">
+                                        ⚡ Quick Win
+                                    </Badge>
+                                </Tooltip>
+                            )}
+
+                            {/* High Confidence Chip */}
+                            {confidence === 'high' && (
+                                <Tooltip text="High Confidence: Pattern detection algorithm has >80% certainty based on strong behavioral signals in your data">
+                                    <span className="border border-gray-200 text-gray-500 px-2 py-0.5 rounded text-[10px] font-medium uppercase cursor-help">
+                                        High Confidence
+                                    </span>
+                                </Tooltip>
+                            )}
+                        </div>
                     </div>
 
                     {/* Revenue at Risk - PROMINENT DISPLAY */}

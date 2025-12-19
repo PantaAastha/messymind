@@ -223,6 +223,8 @@ function generateSessionEvents(
             event_timestamp: new Date(timestamp).toISOString(),
             item_id: 'item_normal',
             item_price: 50,
+            value: 50,  // Transaction-level value for accurate AOV
+            currency: 'USD',
             page_location: '/checkout/success',
             user_pseudo_id: userId
         });
