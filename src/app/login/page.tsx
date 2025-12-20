@@ -64,9 +64,9 @@ export default function LoginPage() {
                                     Password
                                 </label>
                                 <div className="text-sm">
-                                    <a href="#" className="font-medium text-[#AC039C] hover:text-[#74B72E] transition-colors cursor-pointer">
+                                    <Link href="/forgot-password" className="font-medium text-[#AC039C] hover:text-[#74B72E] transition-colors cursor-pointer">
                                         Forgot password?
-                                    </a>
+                                    </Link>
                                 </div>
                             </div>
                             <div className="mt-2">
