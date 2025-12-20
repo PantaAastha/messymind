@@ -37,9 +37,11 @@ export default function UploadPage() {
 
     const handleGenerateSample = () => {
         const sampleEvents = generateSampleGA4Data({
-            sessionCount: 30,
-            comparisonParalysisRate: 0.3,
-            trustRiskRate: 0.25,
+            sessionCount: 150,
+            comparisonParalysisRate: 0.25,
+            trustRiskRate: 0.18,
+            valueUncertaintyRate: 0.22,
+            ambientShoppingRate: 0.20,
         });
 
         const csv = eventsToCSV(sampleEvents);
@@ -49,9 +51,11 @@ export default function UploadPage() {
     const handleUseDemoData = () => {
         // Generate sample data directly
         const sampleEvents = generateSampleGA4Data({
-            sessionCount: 30,
-            comparisonParalysisRate: 0.4,
-            trustRiskRate: 0.4,
+            sessionCount: 150,
+            comparisonParalysisRate: 0.25,
+            trustRiskRate: 0.18,
+            valueUncertaintyRate: 0.22,
+            ambientShoppingRate: 0.20,
         });
 
         // Validate it

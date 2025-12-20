@@ -10,6 +10,8 @@ interface GeneratorOptions {
     sessionCount?: number;
     comparisonParalysisRate?: number; // % of sessions with this pattern
     trustRiskRate?: number; // % of sessions with this pattern
+    valueUncertaintyRate?: number; // % of sessions with this pattern
+    ambientShoppingRate?: number; // % of sessions with this pattern
 }
 
 /**
@@ -17,9 +19,11 @@ interface GeneratorOptions {
  */
 export function generateSampleGA4Data(options: GeneratorOptions = {}): GA4Event[] {
     const {
-        sessionCount = 30,
-        comparisonParalysisRate = 0.3,
-        trustRiskRate = 0.25,
+        sessionCount = 150,
+        comparisonParalysisRate = 0.25,
+        trustRiskRate = 0.18,
+        valueUncertaintyRate = 0.22,
+        ambientShoppingRate = 0.20,
     } = options;
 
     const events: GA4Event[] = [];
@@ -32,13 +36,17 @@ export function generateSampleGA4Data(options: GeneratorOptions = {}): GA4Event[
 
         // Determine session behavior
         const rand = Math.random();
-        let sessionType: 'comparison_paralysis' | 'trust_risk' | 'normal' | 'mixed';
+        let sessionType: 'comparison_paralysis' | 'trust_risk' | 'value_uncertainty' | 'ambient_shopping' | 'normal';
 
-        // Distribution
+        // Variable distribution
         if (rand < comparisonParalysisRate) {
             sessionType = 'comparison_paralysis';
         } else if (rand < comparisonParalysisRate + trustRiskRate) {
             sessionType = 'trust_risk';
+        } else if (rand < comparisonParalysisRate + trustRiskRate + valueUncertaintyRate) {
+            sessionType = 'value_uncertainty';
+        } else if (rand < comparisonParalysisRate + trustRiskRate + valueUncertaintyRate + ambientShoppingRate) {
+            sessionType = 'ambient_shopping';
         } else {
             sessionType = 'normal';
         }
@@ -66,7 +74,7 @@ export function generateSampleGA4Data(options: GeneratorOptions = {}): GA4Event[
 function generateSessionEvents(
     sessionId: string,
     userId: string,
-    sessionType: 'comparison_paralysis' | 'trust_risk' | 'normal' | 'mixed',
+    sessionType: 'comparison_paralysis' | 'trust_risk' | 'value_uncertainty' | 'ambient_shopping' | 'normal',
     severity: 'low' | 'medium' | 'high',
     categories: string[],
     baseDate: Date,
@@ -190,6 +198,143 @@ function generateSessionEvents(
         timestamp += 50000;
 
         // 5. No Purchase (Dropoff)
+
+    } else if (sessionType === 'value_uncertainty') {
+        // --- Value Uncertainty Logic ---
+        // Rule A: Sticker Shock - add to cart, view cart, check shipping policy
+        // Rule B: Deal Hunter - view sale pages, many products, no purchase
+        // Rule C: Cart Staller - multiple cart views, long dwell time
+
+        // View some products first
+        const productViewCount = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < productViewCount; i++) {
+            const itemId = `item_value_${i}`;
+            const price = 60 + Math.random() * 80;
+            events.push(createViewEvent(sessionId, userId, timestamp, itemId, primaryCategory, price, i));
+            timestamp += 25000 + Math.random() * 15000;
+        }
+
+        // Add to cart
+        const cartItem = 'item_value_0';
+        events.push({
+            session_id: sessionId,
+            event_name: 'add_to_cart',
+            event_timestamp: new Date(timestamp).toISOString(),
+            item_id: cartItem,
+            item_name: 'Value Item',
+            item_category: primaryCategory,
+            item_price: 75.00,
+            page_location: `/product/${cartItem}`,
+            user_pseudo_id: userId,
+        });
+        timestamp += 10000;
+
+        // View cart (first time)
+        events.push({
+            session_id: sessionId,
+            event_name: 'view_cart',
+            event_timestamp: new Date(timestamp).toISOString(),
+            page_location: '/cart',
+            user_pseudo_id: userId,
+        });
+        timestamp += 15000;
+
+        if (severity === 'high' || severity === 'medium') {
+            // Check shipping policy (triggers Rule A)
+            events.push(createPageEvent(sessionId, userId, timestamp, '/shipping', 'Shipping Policy'));
+            timestamp += 35000;
+
+            // View sale/clearance pages (triggers Rule B)
+            if (severity === 'high') {
+                events.push(createPageEvent(sessionId, userId, timestamp, '/sale', 'Sale Items'));
+                timestamp += 40000;
+                events.push(createPageEvent(sessionId, userId, timestamp, '/clearance', 'Clearance'));
+                timestamp += 30000;
+            }
+
+            // Return to cart (triggers Rule C - multiple cart views)
+            events.push({
+                session_id: sessionId,
+                event_name: 'view_cart',
+                event_timestamp: new Date(timestamp).toISOString(),
+                page_location: '/cart',
+                user_pseudo_id: userId,
+            });
+            timestamp += 50000; // Long stall duration (>=45s)
+
+            // Optional third cart view for high severity
+            if (severity === 'high') {
+                events.push({
+                    session_id: sessionId,
+                    event_name: 'view_cart',
+                    event_timestamp: new Date(timestamp).toISOString(),
+                    page_location: '/cart',
+                    user_pseudo_id: userId,
+                });
+                timestamp += 25000;
+            }
+        } else {
+            // Low severity - just single stall
+            timestamp += 50000; // Stall on cart page
+        }
+
+        // No Purchase (Dropoff)
+
+    } else if (sessionType === 'ambient_shopping') {
+        // --- Ambient Shopping Logic ---
+        // Rule A: Mall Walker - long session, dwell time, no cart
+        // Rule B: Channel Surfer - many products, many categories, fast browsing
+        // Rule C: Content-First - blog views, some products, no cart
+
+        let productCount, categoryCount, avgTimePerProduct, includeBlog;
+
+        switch (severity) {
+            case 'high':
+                productCount = 8 + Math.floor(Math.random() * 5);
+                categoryCount = 3 + Math.floor(Math.random() * 2);
+                avgTimePerProduct = 70000 + Math.random() * 30000; // 70-100s (long dwell)
+                includeBlog = true;
+                break;
+            case 'medium':
+                productCount = 5 + Math.floor(Math.random() * 3);
+                categoryCount = 3;
+                avgTimePerProduct = 40000 + Math.random() * 20000; // 40-60s
+                includeBlog = Math.random() > 0.5;
+                break;
+            case 'low':
+                productCount = 3 + Math.floor(Math.random() * 2);
+                categoryCount = 2;
+                avgTimePerProduct = 25000 + Math.random() * 15000; // 25-40s (faster)
+                includeBlog = false;
+                break;
+        }
+
+        // Optional blog/content view (triggers Rule C)
+        if (includeBlog) {
+            events.push(createPageEvent(sessionId, userId, timestamp, '/blog/new-arrivals', 'New Arrivals Blog'));
+            timestamp += 60000;
+        }
+
+        // View products across multiple categories
+        const usedCategories = categories.slice(0, categoryCount);
+        for (let i = 0; i < productCount; i++) {
+            const category = usedCategories[i % usedCategories.length];
+            const itemId = `item_ambient_${category.replace(/\s/g, '_')}_${i}`;
+            const price = 45 + Math.random() * 90;
+
+            events.push(createViewEvent(sessionId, userId, timestamp, itemId, category, price, i));
+
+            // Sometimes revisit same product (creates long dwell)
+            if (severity === 'high' && Math.random() < 0.4) {
+                timestamp += avgTimePerProduct / 2;
+                events.push(createViewEvent(sessionId, userId, timestamp, itemId, category, price, i));
+                timestamp += avgTimePerProduct / 2;
+            } else {
+                timestamp += avgTimePerProduct;
+            }
+        }
+
+        // No Add to Cart (ambient browsing)
 
     } else {
         // --- Normal Session ---
