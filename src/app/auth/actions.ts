@@ -5,13 +5,13 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 function getBaseUrl() {
-    // In production, use the Vercel URL
-    if (process.env.VERCEL_URL) {
-        return `https://${process.env.VERCEL_URL}`
-    }
-    // For explicit site URL configuration
+    // For explicit site URL configuration (recommended for production)
     if (process.env.NEXT_PUBLIC_SITE_URL) {
         return process.env.NEXT_PUBLIC_SITE_URL
+    }
+    // In Vercel deployments, use the Vercel URL
+    if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`
     }
     // Fallback for local development
     return 'http://localhost:3000'
