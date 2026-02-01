@@ -5,8 +5,6 @@ import Link from 'next/link';
 import type { DiagnosisOutput, AggregateMetrics } from '@/types/diagnostics';
 import { PriorityCard } from './PriorityCard';
 import { DiagnosticSheet } from './DiagnosticSheet';
-import { generateReportPDF } from '@/app/actions/generatePDF';
-import { base64ToBlob, downloadBlob } from '@/lib/pdf/utils';
 import { Badge } from '../ui/Badge';
 import { InfoTooltip } from '../ui/InfoTooltip';
 

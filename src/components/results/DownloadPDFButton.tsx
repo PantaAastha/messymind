@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { generateReportPDF } from '@/app/actions/generatePDF';
-import { base64ToBlob, downloadBlob } from '@/lib/pdf/utils';
+import { fetchDiagnosticDataForPDF } from '@/app/actions/fetchPDFData';
+import { generatePDFReport } from '@/lib/pdf/pdfGenerator';
 
 interface DownloadPDFButtonProps {
     sessionId: string;
@@ -15,9 +15,27 @@ export default function DownloadPDFButton({ sessionId }: DownloadPDFButtonProps)
         setIsGeneratingPDF(true);
 
         try {
-            const pdfBase64 = await generateReportPDF(sessionId);
-            const pdfBlob = base64ToBlob(pdfBase64, 'application/pdf');
-            downloadBlob(pdfBlob, `messymind-report-${sessionId}.pdf`);
+            // Fetch data from server (with auth context)
+            const result = await fetchDiagnosticDataForPDF(sessionId);
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to fetch data');
+            }
+
+            const { session, diagnoses } = result.data;
+
+            // Generate PDF on client side using jspdf
+            const pdfBlob = generatePDFReport(sessionId, session, diagnoses);
+
+            // Download the PDF
+            const url = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `messymind-report-${sessionId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         } catch (error) {
             console.error('PDF generation failed:', error);
             alert('Failed to generate PDF. Please try again.');
