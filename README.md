@@ -4,9 +4,13 @@ A behavioral diagnostics tool that helps e-commerce businesses identify why shop
 
 ## Demo
 
-https://github.com/user-attachments/assets/YOUR_VIDEO_ID
+![Dashboard showing detected patterns](docs/screenshots/dashboard.png)
 
-> *Upload a CSV of GA4 events, get a diagnosis with interventions.*
+![Pattern analysis with interventions](docs/screenshots/pattern-detail.png)
+
+![Pattern analysis with interventions](docs/screenshots/pattern-detail1.png)
+
+[Sample PDF Report](docs/sample-report.pdf)
 
 ## What it does
 
